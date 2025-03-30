@@ -104,8 +104,8 @@ class QrDetailScreen extends HookConsumerWidget {
                           // コピー成功を表示
                           _showCopiedMessage(context);
 
-                          // 3秒後にアイコンを元に戻す
-                          Future.delayed(const Duration(seconds: 3), () {
+                          // 2秒後にアイコンを元に戻す
+                          Future.delayed(const Duration(seconds: 2), () {
                             if (context.mounted) {
                               isCopied.value = false;
                             }

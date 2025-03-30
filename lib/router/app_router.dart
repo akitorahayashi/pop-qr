@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-import '../screen/home_screen.dart';
-import '../screen/qr_detail_screen.dart';
+import '../view/home_screen.dart';
+import '../view/qr_detail_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
