@@ -85,14 +85,9 @@ void main() {
     mockStorageService = MockStorageService();
     await mockStorageService.init();
 
-    // カスタムストレージサービスプロバイダー
-    final mockStorageServiceProvider = Provider<StorageService>((ref) {
-      return mockStorageService;
-    });
-
     container = ProviderContainer(
       overrides: [
-        storageServiceProvider.overrideWithProvider(mockStorageServiceProvider),
+        storageServiceProvider.overrideWith((ref) => mockStorageService),
       ],
     );
   });
@@ -189,7 +184,9 @@ void main() {
 
       // エラーを発生させるStorageServiceを使用するコンテナを作成
       final errorContainer = ProviderContainer(
-        overrides: [storageServiceProvider.overrideWithValue(mockErrorService)],
+        overrides: [
+          storageServiceProvider.overrideWith((ref) => mockErrorService),
+        ],
       );
 
       // プロバイダーの初期状態を取得

@@ -74,9 +74,9 @@ class HomeScreen extends HookConsumerWidget {
               },
               loading: () => const Center(child: CupertinoActivityIndicator()),
               error: (error, stackTrace) {
-                // エラー内容をコンソールに出力
-                print('エラーが発生しました: $error');
-                print('Stack trace: $stackTrace');
+                // エラー内容をデバッグモードでのみ出力
+                debugPrint('エラーが発生しました: $error');
+                debugPrint('Stack trace: $stackTrace');
 
                 return ErrorView(
                   errorMessage: error.toString(),
@@ -102,7 +102,9 @@ class HomeScreen extends HookConsumerWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: CupertinoColors.systemGrey.withOpacity(0.3),
+                        color: CupertinoColors.systemGrey.withValues(
+                          alpha: 0.3,
+                        ),
                         blurRadius: 6,
                         offset: const Offset(0, 3),
                       ),

@@ -17,7 +17,7 @@ void showQrDetailModal({
     context: context,
     barrierDismissible: true,
     barrierLabel: "QR Detail",
-    barrierColor: CupertinoColors.black.withOpacity(0.6),
+    barrierColor: CupertinoColors.black.withValues(alpha: 0.6),
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (_, __, ___) => Container(), // Will not be used
     transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -64,7 +64,7 @@ class _QrDetailModalContent extends HookConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: CupertinoColors.black.withOpacity(0.2),
+                  color: CupertinoColors.black.withValues(alpha: 0.2),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -103,7 +103,9 @@ class _QrDetailModalContent extends HookConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: CupertinoColors.systemGrey4.withOpacity(0.3),
+                        color: CupertinoColors.systemGrey4.withValues(
+                          alpha: 0.3,
+                        ),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),
@@ -203,11 +205,13 @@ class _QrDetailModalContent extends HookConsumerWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.darkBackgroundGray.withOpacity(0.8),
+                  color: CupertinoColors.darkBackgroundGray.withValues(
+                    alpha: 0.8,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: CupertinoColors.black.withOpacity(0.15),
+                      color: CupertinoColors.black.withValues(alpha: 0.15),
                       blurRadius: 10,
                       spreadRadius: 0,
                       offset: const Offset(0, 5),
