@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:pop_qr/screen/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
+import 'package:pop_qr/screen/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
 
 import '../provider/qr_items_provider.dart';
 import 'component/qr_item_card.dart';
@@ -11,7 +10,7 @@ class HomeScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final qrItems = ref.watch(qrItemsProvider);
+    final qrItemsAsync = ref.watch(qrItemsProvider);
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
@@ -25,17 +24,21 @@ class HomeScreen extends HookConsumerWidget {
       child: SafeArea(
         child: Stack(
           children: [
-            qrItems.isEmpty
-                ? const Center(
-                  child: Text(
-                    'QRコードが登録されていません',
-                    style: TextStyle(
-                      color: CupertinoColors.secondaryLabel,
-                      fontSize: 16,
+            qrItemsAsync.when(
+              data: (qrItems) {
+                if (qrItems.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'QRコードが登録されていません',
+                      style: TextStyle(
+                        color: CupertinoColors.secondaryLabel,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                )
-                : GridView.builder(
+                  );
+                }
+
+                return GridView.builder(
                   padding: const EdgeInsets.all(16),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -46,9 +49,21 @@ class HomeScreen extends HookConsumerWidget {
                   itemCount: qrItems.length,
                   itemBuilder: (context, index) {
                     final item = qrItems[index];
-                    return QRItemCard(item: item);
+                    return QRItemCard(item: item, index: index);
                   },
-                ),
+                );
+              },
+              loading: () => const Center(child: CupertinoActivityIndicator()),
+              error:
+                  (error, stackTrace) => Center(
+                    child: Text(
+                      'エラーが発生しました: $error',
+                      style: const TextStyle(
+                        color: CupertinoColors.destructiveRed,
+                      ),
+                    ),
+                  ),
+            ),
             Positioned(
               right: 16,
               bottom: 16,

@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pop_qr/app.dart';
 
-import 'router/app_router.dart';
 import 'service/storage_service.dart';
+
+/// 環境変数
+// 広告テストモードを管理するフラグ
+final adTestModeProvider = Provider<bool>((ref) => true);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,23 +15,5 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
 
-  runApp(const ProviderScope(child: MyApp()));
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoApp.router(
-      title: 'Pop QR',
-      theme: const CupertinoThemeData(
-        primaryColor: CupertinoColors.systemBlue,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: CupertinoColors.systemBackground,
-      ),
-      routerConfig: appRouter,
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  runApp(const ProviderScope(child: PopQRApp()));
 }

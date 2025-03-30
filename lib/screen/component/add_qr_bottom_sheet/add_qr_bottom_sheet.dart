@@ -3,8 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
-import '../../provider/qr_items_provider.dart';
-import '../../util/validation.dart';
+import '../../../provider/qr_items_provider.dart';
+import '../../../util/validation.dart';
+import '../dialog/emoji_input_dialog.dart';
 import 'component/add_qr_button.dart';
 import 'component/input_field.dart';
 
@@ -244,88 +245,19 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                     const SizedBox(width: 12),
                                     // 選択中の絵文字表示 + 入力可能なフィールド
                                     GestureDetector(
-                                      onTap: () {
-                                        // フォーカスを当てることでキーボードを表示
-                                        final emojiTextController =
-                                            TextEditingController(
-                                              text: selectedEmoji.value,
+                                      onTap: () async {
+                                        // 新しい絵文字入力ダイアログを表示
+                                        final emoji =
+                                            await showEmojiInputDialog(
+                                              context: context,
+                                              initialEmoji: selectedEmoji.value,
                                             );
-                                        showCupertinoDialog(
-                                          context: context,
-                                          barrierDismissible: true,
-                                          builder: (context) {
-                                            return CupertinoAlertDialog(
-                                              title: const Text('絵文字を入力'),
-                                              content: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 8.0,
-                                                    ),
-                                                child: CupertinoTextField(
-                                                  controller:
-                                                      emojiTextController,
-                                                  style: const TextStyle(
-                                                    fontSize: 24,
-                                                  ),
-                                                  textAlign: TextAlign.center,
-                                                  autofocus: true,
-                                                  onChanged: (value) {
-                                                    if (value.isNotEmpty) {
-                                                      String firstChar =
-                                                          value
-                                                              .characters
-                                                              .first;
-                                                      if (value.length > 1) {
-                                                        // 1文字のみ使用するように制限
-                                                        emojiTextController
-                                                            .text = firstChar;
-                                                        emojiTextController
-                                                                .selection =
-                                                            TextSelection.collapsed(
-                                                              offset:
-                                                                  firstChar
-                                                                      .length,
-                                                            );
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ),
-                                              actions: [
-                                                CupertinoDialogAction(
-                                                  child: const Text('キャンセル'),
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        context,
-                                                      ),
-                                                ),
-                                                CupertinoDialogAction(
-                                                  child: const Text('決定'),
-                                                  onPressed: () {
-                                                    final text =
-                                                        emojiTextController
-                                                            .text;
-                                                    if (text.isNotEmpty) {
-                                                      // ダイアログを閉じた後に状態を更新
-                                                      Navigator.pop(context);
-                                                      // 絵文字を更新
-                                                      WidgetsBinding.instance
-                                                          .addPostFrameCallback(
-                                                            (_) {
-                                                              selectedEmoji
-                                                                  .value = text;
-                                                              setEmoji(text);
-                                                            },
-                                                          );
-                                                    } else {
-                                                      Navigator.pop(context);
-                                                    }
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
+
+                                        // 絵文字が選択された場合のみ更新
+                                        if (emoji != null) {
+                                          selectedEmoji.value = emoji;
+                                          setEmoji(emoji);
+                                        }
                                       },
                                       child: Container(
                                         width: 42,

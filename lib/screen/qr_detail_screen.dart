@@ -14,130 +14,150 @@ class QrDetailScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final qrItems = ref.watch(qrItemsProvider);
-    final qrItem = qrItems.firstWhere(
-      (item) => item.id == id,
-      orElse: () => throw Exception('QR item not found'),
-    );
+    final qrItemsAsync = ref.watch(qrItemsProvider);
 
-    // アイコンの状態を管理
-    final isCopied = useState(false);
+    return qrItemsAsync.when(
+      data: (qrItems) {
+        // データがロードされた場合
+        final qrItem = qrItems.firstWhere(
+          (item) => item.id == id,
+          orElse: () => throw Exception('QR item not found'),
+        );
 
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(qrItem.title),
-        backgroundColor: CupertinoColors.systemBackground,
-        border: Border(
-          bottom: BorderSide(color: CupertinoColors.separator, width: 0.0),
-        ),
-        leading: CupertinoNavigationBarBackButton(
-          onPressed: () => context.go('/'),
-          color: CupertinoColors.activeBlue,
-        ),
-      ),
-      backgroundColor: CupertinoColors.systemBackground,
-      child: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemBackground,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: CupertinoColors.systemGrey.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: QrImageView(
-                  data: qrItem.url,
-                  version: QrVersions.auto,
-                  size: 200.0,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                qrItem.title,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36),
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      // URLをクリップボードにコピー
-                      Clipboard.setData(ClipboardData(text: qrItem.url));
+        // アイコンの状態を管理
+        final isCopied = useState(false);
 
-                      // アイコンをチェックマークに変更
-                      isCopied.value = true;
-
-                      // コピー成功を表示
-                      _showCopiedMessage(context);
-
-                      // 3秒後にアイコンを元に戻す
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (context.mounted) {
-                          isCopied.value = false;
-                        }
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (
-                            Widget child,
-                            Animation<double> animation,
-                          ) {
-                            return ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            );
-                          },
-                          child:
-                              isCopied.value
-                                  ? const Icon(
-                                    CupertinoIcons.checkmark,
-                                    key: ValueKey('check'),
-                                    size: 16,
-                                    color: CupertinoColors.secondaryLabel,
-                                  )
-                                  : const Icon(
-                                    CupertinoIcons.doc_on_doc,
-                                    key: ValueKey('copy'),
-                                    size: 16,
-                                    color: CupertinoColors.secondaryLabel,
-                                  ),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            qrItem.url,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: CupertinoColors.secondaryLabel,
-                            ),
-                          ),
+        return CupertinoPageScaffold(
+          navigationBar: CupertinoNavigationBar(
+            middle: Text(qrItem.title),
+            backgroundColor: CupertinoColors.systemBackground,
+            border: Border(
+              bottom: BorderSide(color: CupertinoColors.separator, width: 0.0),
+            ),
+            leading: CupertinoNavigationBarBackButton(
+              onPressed: () => context.go('/'),
+              color: CupertinoColors.activeBlue,
+            ),
+          ),
+          backgroundColor: CupertinoColors.systemBackground,
+          child: SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.systemBackground,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: CupertinoColors.systemGrey.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
+                    child: QrImageView(
+                      data: qrItem.url,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    qrItem.title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 36),
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          // URLをクリップボードにコピー
+                          Clipboard.setData(ClipboardData(text: qrItem.url));
+
+                          // アイコンをチェックマークに変更
+                          isCopied.value = true;
+
+                          // コピー成功を表示
+                          _showCopiedMessage(context);
+
+                          // 3秒後にアイコンを元に戻す
+                          Future.delayed(const Duration(seconds: 3), () {
+                            if (context.mounted) {
+                              isCopied.value = false;
+                            }
+                          });
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              transitionBuilder: (
+                                Widget child,
+                                Animation<double> animation,
+                              ) {
+                                return ScaleTransition(
+                                  scale: animation,
+                                  child: child,
+                                );
+                              },
+                              child:
+                                  isCopied.value
+                                      ? const Icon(
+                                        CupertinoIcons.checkmark,
+                                        key: ValueKey('check'),
+                                        size: 16,
+                                        color: CupertinoColors.secondaryLabel,
+                                      )
+                                      : const Icon(
+                                        CupertinoIcons.doc_on_doc,
+                                        key: ValueKey('copy'),
+                                        size: 16,
+                                        color: CupertinoColors.secondaryLabel,
+                                      ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                qrItem.url,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: CupertinoColors.secondaryLabel,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
+      loading:
+          () => const CupertinoPageScaffold(
+            child: Center(child: CupertinoActivityIndicator()),
+          ),
+      error:
+          (error, stack) => CupertinoPageScaffold(
+            navigationBar: const CupertinoNavigationBar(middle: Text('エラー')),
+            child: Center(
+              child: Text(
+                'エラーが発生しました: $error',
+                style: const TextStyle(color: CupertinoColors.destructiveRed),
+              ),
+            ),
+          ),
     );
   }
 
