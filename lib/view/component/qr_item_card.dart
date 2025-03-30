@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
 import '../../model/qr_item.dart';
 import '../../provider/qr_items_provider.dart';
 import '../../resource/emoji_list.dart';
+import 'qr_detail_modal.dart';
 
 class QRItemCard extends HookConsumerWidget {
   final QrItem item;
@@ -80,9 +80,9 @@ class QRItemCard extends HookConsumerWidget {
 
     // カードのウィジェット
     final cardWidget = GestureDetector(
-      // 通常タップで詳細画面へ
+      // 通常タップでQRコード詳細モーダルを表示
       onTap: () {
-        context.go('/qr/${item.id}');
+        showQrDetailModal(context: context, qrItem: item);
       },
       // 長押しでアクションシート
       onLongPress: () {

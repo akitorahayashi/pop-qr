@@ -1,19 +1,19 @@
 import 'package:flutter/cupertino.dart';
-import 'package:pop_qr/router/app_router.dart';
+import 'package:pop_qr/view/home_screen.dart';
 
 class PopQRApp extends StatelessWidget {
   const PopQRApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoApp.router(
+    return const CupertinoApp(
       title: 'Pop QR',
-      theme: const CupertinoThemeData(
+      theme: CupertinoThemeData(
         primaryColor: CupertinoColors.systemBlue,
         brightness: Brightness.light,
         scaffoldBackgroundColor: CupertinoColors.systemBackground,
       ),
-      routerConfig: appRouter,
+      home: HomeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

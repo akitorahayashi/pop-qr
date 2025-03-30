@@ -21,9 +21,6 @@ dependencies:
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.21.0
   
-  # Router
-  go_router: ^14.0.0
-  
   # QR code generation
   qr_flutter: ^4.1.0
   
