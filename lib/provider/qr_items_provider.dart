@@ -15,7 +15,7 @@ final qrItemsProvider = AsyncNotifierProvider<QrItemsNotifier, List<QrItem>>(
 class QrItemsNotifier extends AsyncNotifier<List<QrItem>> {
   // 環境定数
   static const bool errorTestMode = false;
-  static const bool extendedLoading = true;
+  static const bool extendedLoading = false;
   static const Duration loadingDelay = Duration(seconds: 2);
 
   final _uuid = const Uuid();

@@ -18,11 +18,18 @@ class QRItemCard extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // タップ状態を追跡
     final isPressed = useState(false);
+    // 削除アニメーション用の状態
+    final isRemoving = useState(false);
 
     // アニメーションコントローラー
     final controller = useAnimationController(
       duration: const Duration(milliseconds: 500),
       initialValue: 0.0,
+    );
+
+    // 削除アニメーション用コントローラー
+    final removeController = useAnimationController(
+      duration: const Duration(milliseconds: 300),
     );
 
     // アニメーションの遅延（カードごとに少しずつずらす）
@@ -61,6 +68,16 @@ class QRItemCard extends HookConsumerWidget {
       ),
     );
 
+    // 削除時のアニメーション
+    final removeOpacityAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: removeController, curve: Curves.easeOut));
+
+    final removeScaleAnimation = Tween<double>(begin: 1.0, end: 0.8).animate(
+      CurvedAnimation(parent: removeController, curve: Curves.easeInOut),
+    );
+
     // カードのウィジェット
     final cardWidget = GestureDetector(
       // 通常タップで詳細画面へ
@@ -69,7 +86,7 @@ class QRItemCard extends HookConsumerWidget {
       },
       // 長押しでアクションシート
       onLongPress: () {
-        _showActionSheet(context, ref);
+        _showActionSheet(context, ref, removeController, isRemoving);
       },
       onTapDown: (_) {
         isPressed.value = true;
@@ -142,8 +159,20 @@ class QRItemCard extends HookConsumerWidget {
 
     // アニメーションを適用
     return AnimatedBuilder(
-      animation: controller,
+      animation: Listenable.merge([controller, removeController]),
       builder: (context, child) {
+        // 削除中の場合は、削除アニメーションを適用
+        if (isRemoving.value) {
+          return Opacity(
+            opacity: removeOpacityAnimation.value,
+            child: Transform.scale(
+              scale: removeScaleAnimation.value,
+              child: child,
+            ),
+          );
+        }
+
+        // 通常の表示アニメーション
         return Opacity(
           opacity: fadeAnimation.value,
           child: Transform.translate(
@@ -156,7 +185,12 @@ class QRItemCard extends HookConsumerWidget {
     );
   }
 
-  void _showActionSheet(BuildContext context, WidgetRef ref) {
+  void _showActionSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AnimationController removeController,
+    ValueNotifier<bool> isRemoving,
+  ) {
     showCupertinoModalPopup<void>(
       context: context,
       builder:
@@ -174,9 +208,13 @@ class QRItemCard extends HookConsumerWidget {
               CupertinoActionSheetAction(
                 isDestructiveAction: true,
                 onPressed: () {
-                  // 削除処理
-                  ref.read(qrItemsProvider.notifier).removeItem(item.id);
                   Navigator.pop(context);
+                  // 削除アニメーションを開始
+                  isRemoving.value = true;
+                  removeController.forward().then((_) {
+                    // アニメーション完了後に実際に削除
+                    ref.read(qrItemsProvider.notifier).removeItem(item.id);
+                  });
                 },
                 child: const Text('削除'),
               ),

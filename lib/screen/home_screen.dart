@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pop_qr/screen/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
 
 import '../provider/qr_items_provider.dart';
+import 'component/error_view.dart';
 import 'component/qr_item_card.dart';
 
 class HomeScreen extends HookConsumerWidget {
@@ -27,13 +28,31 @@ class HomeScreen extends HookConsumerWidget {
             qrItemsAsync.when(
               data: (qrItems) {
                 if (qrItems.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'QRコードが登録されていません',
-                      style: TextStyle(
-                        color: CupertinoColors.secondaryLabel,
-                        fontSize: 16,
-                      ),
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          CupertinoIcons.qrcode,
+                          size: 32,
+                          color: CupertinoColors.secondaryLabel,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'QRコードが登録されていません',
+                          style: TextStyle(
+                            color: CupertinoColors.secondaryLabel,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () => _showAddQrBottomSheet(context, ref),
+                          child: const Text('QRコードを追加'),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -54,15 +73,20 @@ class HomeScreen extends HookConsumerWidget {
                 );
               },
               loading: () => const Center(child: CupertinoActivityIndicator()),
-              error:
-                  (error, stackTrace) => Center(
-                    child: Text(
-                      'エラーが発生しました: $error',
-                      style: const TextStyle(
-                        color: CupertinoColors.destructiveRed,
-                      ),
-                    ),
-                  ),
+              error: (error, stackTrace) {
+                // エラー内容をコンソールに出力
+                print('エラーが発生しました: $error');
+                print('Stack trace: $stackTrace');
+
+                return ErrorView(
+                  errorMessage: error.toString(),
+                  showDetails: false,
+                  onRetry: () {
+                    // データの再読み込みを実行
+                    ref.invalidate(qrItemsProvider);
+                  },
+                );
+              },
             ),
             Positioned(
               right: 16,
