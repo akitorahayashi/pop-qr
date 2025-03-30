@@ -16,12 +16,12 @@ class DefaultQrItems {
         emoji: '🐤',
       ),
 
-      // LINE
+      // Pop QR
       QrItem(
         id: _uuid.v4(),
-        title: 'LINE友だち追加',
-        url: 'https://line.me/R/ti/p/@yourname',
-        emoji: '💬',
+        title: 'Pop QR アプリ',
+        url: 'https://apps.apple.com/jp/app/youtube/id544007664',
+        emoji: '🔳',
       ),
 
       // 入力フォーム

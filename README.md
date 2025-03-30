@@ -1,102 +1,116 @@
-# Pop QR - パーソナルQRコード管理アプリ
+# Pop QR - QRコード管理アプリ
 
 ## プロジェクト概要
 
-Pop QRは、個人のURLリンク（SNSプロフィール、ポートフォリオサイト、連絡先情報など）をQRコードとして保存・管理するためのiOS風Flutterアプリケーションです。直感的なギャラリー形式のレイアウトと滑らかなアニメーションを組み合わせることで、QRコードの追加・表示をスムーズに行うことができます。
+Pop QRは、URLリンクをQRコードとして保存・管理するためのFlutterアプリです。シンプルなUIでQRコードの追加・表示を行うことができます。
 
-各QRコードはカード形式で表示され、タップすると滑らかなアニメーションとともに拡大表示されます。洗練されたiOS風のデザイン言語を採用しており、Cupertinoウィジェットを活用した一貫性のあるユーザーインターフェースを提供します。
+QRコードはカード形式で表示され、タップするとモーダルでQRコードを表示します。iOS風のデザインを採用し、Cupertinoウィジェットを活用しています。
 
 <img width="200" alt="サンプル画像" src="https://via.placeholder.com/300x600/1E88E5/FFFFFF?text=Pop+QR" />
 
 ## アーキテクチャ
 
-本プロジェクトはクリーンアーキテクチャの原則に従い、以下の構成を採用しています：
+本プロジェクトは関心の分離を意識した設計を採用しています：
 
-- **プレゼンテーション層**: UIコンポーネントとユーザー入力の処理
-- **ドメイン層**: ビジネスロジックとデータモデル
-- **データ層**: データの永続化とリポジトリ
+- **UI層**: 画面表示とユーザー入力の処理
+- **ビジネスロジック層**: データ操作の処理
+- **データ層**: データの永続化
 
-### 状態管理パターン
+### 状態管理
 
-状態管理にはRiverpodを採用し、宣言的かつリアクティブなデータフローを実現しています：
+状態管理にはRiverpodを使用しています：
 
 ```
 UI → Provider → Service → Storage → Provider → UI（更新）
 ```
 
-- **UI**: ユーザー操作を受け付け、Providerにアクションを通知
-- **Provider**: 状態管理と更新ロジックを提供
-- **Service**: ビジネスロジックとデータ操作
-- **Storage**: ローカルデータの永続化
+- **UI**: ユーザーの操作を受け付ける
+- **Provider**: 状態を管理する
+- **Service**: データ操作を行う
+- **Storage**: データを保存する
 
 ## ディレクトリ構成
 
 ```
 pop_qr/
 ├── lib/
-│   ├── model/                      # データモデル
-│   │   └── qr_item.dart            # QRコードアイテムの定義
+│   ├── app.dart                    # アプリケーションのルート
+│   ├── main.dart                   # エントリーポイント
 │   │
-│   ├── provider/                   # 状態管理
+│   ├── model/                      
+│   │   ├── qr_item.dart            # QRコードモデルの定義
+│   │   └── generate/               # 自動生成コード
+│   │
+│   ├── provider/                   
 │   │   └── qr_items_provider.dart  # QRコードアイテムの状態管理
 │   │
-│   ├── router/                     # ルーティング
-│   │   └── app_router.dart         # アプリのルーティング設定
+│   ├── service/                    
+│   │   └── storage_service.dart    # データの永続化
 │   │
-│   ├── screen/                     # 画面
+│   ├── view/                       
 │   │   ├── home_screen.dart        # ホーム画面
-│   │   └── qr_detail_screen.dart   # QRコード詳細画面
+│   │   ├── error_view.dart         # エラー表示画面
+│   │   │
+│   │   ├── component/              
+│   │   │   ├── qr_item_card.dart   # QRコードアイテムカード
+│   │   │   └── qr_detail_modal.dart # QRコードの詳細のポップアップ
+│   │   │
+│   │   └── add_qr_bottom_sheet/    
+│   │       ├── add_qr_bottom_sheet.dart # QRコードのデータを追加するシート
+│   │       └── component/          
+│   │           ├── add_qr_button.dart  # 追加ボタンコンポーネント
+│   │           ├── input_field.dart    # 入力フィールドコンポーネント
+│   │           ├── qr_icon_selector.dart # アイコン選択コンポーネント
+│   │           └── qr_icon_data.dart   # アイコンデータ定義
 │   │
-│   ├── service/                    # サービス
-│   │   └── storage_service.dart    # データ永続化サービス
+│   ├── resource/                   
+│   │   ├── default_qr_items.dart   # デフォルトQRアイテム
+│   │   └── emoji_list.dart         # 絵文字リスト
 │   │
-│   ├── widget/                     # 再利用可能なウィジェット
-│   │   ├── qr_item_card.dart       # QRコードアイテムカード
-│   │   └── add_qr_bottom_sheet.dart # QRコード追加ボトムシート
-│   │
-│   └── main.dart                   # アプリのエントリーポイント
+│   └── util/                       
+│       └── validation.dart         # 入力検証ユーティリティ
 │
-├── build.yaml                      # ビルド設定
-└── pubspec.yaml                    # 依存関係管理
+├── test/                          
+│   ├── unit_test/                 # ユニットテスト
+│   └── widget_test/               # ウィジェットテスト
+│
+├── assets/                        # アセットファイル（画像など）
+├── .github/workflows/            # GitHub Actions ワークフロー
+├── android/                      # Android プラットフォーム固有のコード
+├── ios/                          # iOS プラットフォーム固有のコード
+├── macos/                        # macOS プラットフォーム固有のコード
+├── web/                          # Webプラットフォーム固有のコード
+├── linux/                        # Linux プラットフォーム固有のコード
+├── windows/                      # Windows プラットフォーム固有のコード
+├── build.yaml                    # freezedによってスキャンする範囲の限定
+└── pubspec.yaml                  # 依存関係管理
 ```
 
-## 技術スタック
+## 使用パッケージ
 
-### 言語とフレームワーク
-- **Dart**: Flutter SDKで使用されるプログラミング言語
-- **Flutter**: クロスプラットフォームUIフレームワーク
+### UI関連
+- **cupertino_icons**
+- **qr_flutter**
 
-### 使用パッケージ
+### 状態管理
+- **flutter_riverpod**
+- **hooks_riverpod**
+- **flutter_hooks**
 
-#### UI関連
-- **flutter_cupertino**: iOS風のUIコンポーネント
-- **cupertino_icons**: iOSスタイルのアイコンセット
-- **qr_flutter**: QRコード生成ライブラリ
+### データモデル
+- **freezed**
+- **json_serializable**
 
-#### 状態管理
-- **flutter_riverpod**: 状態管理フレームワーク
-- **hooks_riverpod**: RiverpodとFlutter Hooksの統合
-- **flutter_hooks**: 再利用可能なステート処理ロジック
+### データ永続化
+- **shared_preferences**
 
-#### データモデル・シリアライズ
-- **freezed**: イミュータブルなデータクラス生成
-- **freezed_annotation**: Freezed用アノテーション
-- **json_serializable**: JSONシリアライズ/デシリアライズ
-- **json_annotation**: JSONシリアライズ用アノテーション
-
-#### ルーティング
-- **go_router**: 宣言的ルーティングライブラリ
-
-#### データ永続化
-- **shared_preferences**: キー・バリュー形式のデータ保存
-
-#### ユーティリティ
-- **uuid**: 一意のID生成
+### その他
+- **uuid**
 
 ## 主要機能
 
-### ギャラリー形式のQRコード表示
-ホーム画面では、保存したQRコードをグリッドレイアウトで表示します。各アイテムは視認性の高いカードUIで表示され、一目でタイトルとアイコンが分かるようになっています。ユーザーは視覚的に情報を素早く把握でき、目的のQRコードにすぐアクセスできます。
+### QRコードのグリッド表示
+ホーム画面では、保存したQRコードの情報をグリッドレイアウトで表示します。
 
 ```dart
 GridView.builder(
@@ -110,20 +124,18 @@ GridView.builder(
 )
 ```
 
-### スムーズなアニメーションとヒーロートランジション
-QRコードカードをタップすると、Heroアニメーションによって滑らかに詳細画面へ遷移します。このアニメーションによって、ユーザーは操作の連続性を視覚的に理解でき、アプリのUXが向上します。
+### ポップアップ表示によるQRコード詳細
+QRコードカードをタップすると、ポップアップでQRコードを表示します。
 
 ```dart
-Hero(
-  tag: 'qr_card_${item.id}',
-  child: Container(
-    // カードのコンテンツ
-  ),
-)
+showCupertinoModalPopup(
+  context: context,
+  builder: (context) => QrDetailModal(item: item),
+);
 ```
 
-### iOS風のボトムシート
-QRコード追加時には、iOSのUIガイドラインに沿ったモーダルボトムシートが表示されます。Cupertinoウィジェットを活用し、ネイティブiOSアプリと同様の操作感を実現しています。
+### QRコード追加機能
+ボトムシートを使用してQRコードを追加できます。
 
 ```dart
 showCupertinoModalPopup(
@@ -132,14 +144,60 @@ showCupertinoModalPopup(
 );
 ```
 
-### カスタマイザブルなアイコン選択
-QRコードアイテムには12種類のCupertinoIconsから選択できるアイコンを設定できます。これにより、各QRコードの内容や目的を視覚的に区別しやすくなります。アイコン選択UIは直感的で、選択中のアイコンがハイライト表示されます。
+### 絵文字による識別
+QRコードに絵文字を設定することで、視覚的に区別できます。
 
 ```dart
-// アイコン選択オプション
-final availableIcons = [
-  AppIconData(CupertinoIcons.link, 'link'),
-  AppIconData(CupertinoIcons.globe, 'globe'),
-  // その他のアイコン
-];
+// デフォルトのQRコードアイテム例
+QrItem(
+  id: _uuid.v4(),
+  title: 'X（旧Twitter）',
+  url: 'https://x.com',
+  emoji: '🐤',
+),
+
+QrItem(
+  id: _uuid.v4(),
+  title: 'Pop QR',
+  url: 'https://apps.apple.com/jp/app/youtube/id544007664',
+  emoji: '🔳',
+),
 ```
+
+## テスト
+
+### ユニットテスト
+StorageServiceとQrItemsProviderのテストを実装しています。
+
+### ウィジェットテスト
+UIコンポーネントの機能テストを実装しています。
+
+## CI/CD
+
+GitHub Actionsによる自動化：
+
+### flutter-ci.yml
+テスト、コード解析、ビルドを行うワークフロー：
+- フォーマットチェック
+- 静的解析
+- テスト実行
+- Android/iOSビルド
+
+### flutter-test.yml
+テスト実行のみを行うワークフロー
+
+## 2つのワークフローに分けた理由
+
+開発効率と資源の最適化のため、以下の2つのワークフローに分けています：
+
+1. **flutter-test.yml** - テストのみを実行する軽量なワークフロー
+   - プルリクエストやコミットごとに高速で実行
+   - フィードバックループを短縮し、開発効率を向上
+   - 基本的な品質保証に焦点
+
+2. **flutter-ci.yml** - 包括的なビルドとテストのワークフロー
+   - マスターブランチへのマージやリリース前に実行
+   - 完全なビルド検証（Android/iOS）を含む
+   - リソース消費が多いため、選択的に実行
+
+この分離により、日常的な開発では高速なテストフィードバックを得つつ、重要なタイミングでは完全な検証を行うことができます。

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pop_qr/view/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
+import 'package:pop_qr/view/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
 
 import '../provider/qr_items_provider.dart';
-import 'component/error_view.dart';
+import 'error_view.dart';
 import 'component/qr_item_card.dart';
 
 class HomeScreen extends HookConsumerWidget {

@@ -3,9 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
-import '../../../provider/qr_items_provider.dart';
-import '../../../resource/emoji_list.dart';
-import '../../../util/validation.dart';
+import '../../provider/qr_items_provider.dart';
+import '../../resource/emoji_list.dart';
+import '../../util/validation.dart';
 import 'component/add_qr_button.dart';
 import 'component/input_field.dart';
 
@@ -277,17 +277,6 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-
-                                // 絵文字選択グリッド
-                                Text(
-                                  'リンクを表す絵文字',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: CupertinoColors.secondaryLabel,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
 
                                 // カテゴリ選択タブ
                                 Container(
