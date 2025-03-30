@@ -75,9 +75,6 @@ class MockStorageService implements StorageService {
       );
     }
   }
-
-  @override
-  void dispose() {}
 }
 
 void main() {
@@ -250,7 +247,4 @@ class MockErrorStorageService implements StorageService {
 
   @override
   Future<void> forceAddDefaultItems({int count = 3}) async {}
-
-  @override
-  void dispose() {}
 }

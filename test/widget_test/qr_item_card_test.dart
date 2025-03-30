@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pop_qr/model/qr_item.dart';
 import 'package:pop_qr/provider/qr_items_provider.dart';
 import 'package:pop_qr/view/component/qr_item_card.dart';
-import 'package:uuid/uuid.dart';
 
 // テスト用のQrItemsNotifier
 class TestQrItemsNotifier extends AsyncNotifier<List<QrItem>>
