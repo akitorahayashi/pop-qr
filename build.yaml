@@ -1,0 +1,34 @@
+# $ dart run build_runner build
+
+targets:
+  $default:
+    sources:
+      include:
+        - lib/model/*.dart
+      exclude:
+        - test/**  # テストコードはビルド対象から除外
+
+    builders:
+      # `source_gen` のビルダー
+      source_gen|combining_builder:
+        generate_for:
+          - lib/model/*.dart
+        options:
+          build_extensions:
+            '^lib/model/{{}}.dart': 'lib/model/generate/{{}}.g.dart'
+
+      # JSON Serializable のビルダー設定
+      json_serializable:
+        generate_for:
+          - lib/model/*.dart
+        options:
+          explicit_to_json: true
+          include_if_null: false 
+          
+      # Freezed のビルダー設定
+      freezed:
+        generate_for:
+          - lib/model/*.dart
+        options:
+          build_extensions:
+            '^lib/model/{{}}.dart': 'lib/model/generate/{{}}.freezed.dart'
