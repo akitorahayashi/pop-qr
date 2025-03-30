@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/qr_item.dart';
+import '../resource/default_qr_items.dart';
 
 class StorageService {
   static final StorageService _instance = StorageService._internal();
   static const String _qrItemsKey = 'qr_items';
+  static const String _isFirstLaunchKey = 'is_first_launch';
 
   factory StorageService() {
     return _instance;
@@ -16,6 +18,21 @@ class StorageService {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+    await _checkAndSetupDefaultItems();
+  }
+
+  /// 初回起動時には初期QRコードデータをセットアップする
+  Future<void> _checkAndSetupDefaultItems() async {
+    final isFirstLaunch = _prefs!.getBool(_isFirstLaunchKey) ?? true;
+
+    if (isFirstLaunch) {
+      // 初期データをセットアップ
+      final defaultItems = DefaultQrItems.getItems();
+      await saveQrItems(defaultItems);
+
+      // 初回起動フラグをfalseに設定
+      await _prefs!.setBool(_isFirstLaunchKey, false);
+    }
   }
 
   Future<List<QrItem>> getQrItems() async {
@@ -35,6 +52,20 @@ class StorageService {
       items.map((item) => item.toJson()).toList(),
     );
     await _prefs!.setString(_qrItemsKey, encoded);
+  }
+
+  /// 指定した数の初期データを強制的に追加する（デバッグや初期化用）
+  Future<void> forceAddDefaultItems({int count = 3}) async {
+    final defaultItems = DefaultQrItems.getItems().take(count).toList();
+    for (final item in defaultItems) {
+      await addQrItem(item);
+    }
+  }
+
+  /// 全てのデータを初期データにリセットする
+  Future<void> resetToDefault() async {
+    final defaultItems = DefaultQrItems.getItems();
+    await saveQrItems(defaultItems);
   }
 
   Future<void> addQrItem(QrItem item) async {

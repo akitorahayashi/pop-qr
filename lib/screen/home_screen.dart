@@ -74,7 +74,7 @@ class HomeScreen extends HookConsumerWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: CupertinoColors.activeBlue,
+                    color: CupertinoColors.systemBackground,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -83,10 +83,14 @@ class HomeScreen extends HookConsumerWidget {
                         offset: const Offset(0, 3),
                       ),
                     ],
+                    border: Border.all(
+                      color: CupertinoColors.systemGrey5,
+                      width: 1.0,
+                    ),
                   ),
                   child: const Icon(
                     CupertinoIcons.add,
-                    color: CupertinoColors.white,
+                    color: CupertinoColors.activeBlue,
                     size: 30,
                   ),
                 ),

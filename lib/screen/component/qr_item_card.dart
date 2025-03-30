@@ -21,12 +21,12 @@ class QRItemCard extends HookConsumerWidget {
 
     // アニメーションコントローラー
     final controller = useAnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 500),
       initialValue: 0.0,
     );
 
     // アニメーションの遅延（カードごとに少しずつずらす）
-    final delay = (index * 100) + 100;
+    final delay = (index * 70) + 50;
 
     // マウント時（初回表示時）に一度だけ実行
     useEffect(() {
@@ -41,7 +41,7 @@ class QRItemCard extends HookConsumerWidget {
     final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOutQuart),
       ),
     );
 
@@ -49,15 +49,15 @@ class QRItemCard extends HookConsumerWidget {
     final scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
       CurvedAnimation(
         parent: controller,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+        curve: const Interval(0.1, 0.7, curve: Curves.easeOutCubic),
       ),
     );
 
     // Y軸移動アニメーション（少し下から上に上がってくる）
-    final slideAnimation = Tween<double>(begin: 20.0, end: 0.0).animate(
+    final slideAnimation = Tween<double>(begin: 15.0, end: 0.0).animate(
       CurvedAnimation(
         parent: controller,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+        curve: const Interval(0.1, 0.7, curve: Curves.easeOutCubic),
       ),
     );
 
