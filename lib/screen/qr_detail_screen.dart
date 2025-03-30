@@ -8,7 +8,7 @@ import '../provider/qr_items_provider.dart';
 class QrDetailScreen extends HookConsumerWidget {
   final String id;
 
-  const QrDetailScreen({Key? key, required this.id}) : super(key: key);
+  const QrDetailScreen({super.key, required this.id});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

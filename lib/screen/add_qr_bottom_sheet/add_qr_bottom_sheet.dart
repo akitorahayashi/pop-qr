@@ -1,35 +1,29 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'dart:async';
 
 import '../../provider/qr_items_provider.dart';
 import '../../util/validation.dart';
-import 'component/add_button.dart';
-import 'component/icon_selector.dart';
+import 'component/add_qr_button.dart';
+import 'component/qr_icon_selector.dart';
 import 'component/input_field.dart';
 import 'component/qr_icon_data.dart';
 
 class AddQrBottomSheet extends HookConsumerWidget {
-  const AddQrBottomSheet({Key? key}) : super(key: key);
+  const AddQrBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final titleController = useTextEditingController();
     final urlController = useTextEditingController();
     final selectedIconIndex = useState(0);
-    final isVisible = useState(false);
-
-    // ドラッグによるシート位置の状態
-    final dragOffset = useState(0.0);
-    final isDragging = useState(false);
 
     // バリデーションエラーメッセージの状態
     final titleError = useState<String?>(null);
     final urlError = useState<String?>(null);
 
-    // ボタン押下時のアニメーション状態
-    final isButtonPressed = useState(false);
+    // フォームが有効かどうかを管理
+    final isFormValid = useState(false);
 
     final availableIcons = [
       QRIconData(CupertinoIcons.link, 'link'),
@@ -48,60 +42,20 @@ class AddQrBottomSheet extends HookConsumerWidget {
 
     // シートを閉じる処理
     void closeSheet(bool saveData) {
-      isVisible.value = false;
-
-      // アニメーションの完了を待つ
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (saveData) {
-          ref
-              .read(qrItemsProvider.notifier)
-              .addItem(
-                title: titleController.text,
-                url: urlController.text,
-                icon: availableIcons[selectedIconIndex.value].name,
-              );
-        }
-        Navigator.of(context).pop();
-      });
+      if (saveData) {
+        ref
+            .read(qrItemsProvider.notifier)
+            .addItem(
+              title: titleController.text,
+              url: urlController.text,
+              icon: availableIcons[selectedIconIndex.value].name,
+            );
+      }
+      Navigator.of(context).pop();
     }
 
-    // モーダル表示時にアニメーション開始
-    useEffect(() {
-      // マイクロタスクを使用して確実に状態を更新
-      Future.microtask(() {
-        isVisible.value = true;
-      });
-      return null;
-    }, const []);
-
-    // 入力値が変更されたらエラーをリセット
-    useEffect(() {
-      void listener() {
-        titleError.value = null;
-      }
-
-      titleController.addListener(listener);
-      return () => titleController.removeListener(listener);
-    }, [titleController]);
-
-    useEffect(() {
-      void listener() {
-        urlError.value = null;
-      }
-
-      urlController.addListener(listener);
-      return () => urlController.removeListener(listener);
-    }, [urlController]);
-
-    // フォーム送信処理
-    void submitForm() {
-      // タップフィードバックアニメーション
-      isButtonPressed.value = true;
-      Future.delayed(const Duration(milliseconds: 150), () {
-        isButtonPressed.value = false;
-      });
-
-      // バリデーションを実行
+    // フォームの入力内容を検証
+    void validateForm() {
       final titleValidationResult = Validation.validateTitle(
         titleController.text,
       );
@@ -111,10 +65,49 @@ class AddQrBottomSheet extends HookConsumerWidget {
       titleError.value = titleValidationResult;
       urlError.value = urlValidationResult;
 
+      // 両方のフィールドが有効な場合のみフォームは有効
+      isFormValid.value =
+          titleValidationResult == null && urlValidationResult == null;
+    }
+
+    // テキスト変更時のリスナー（デバウンス処理付き）
+    useEffect(() {
+      void listener() {
+        // タイトルのバリデーションを実行
+        validateForm();
+      }
+
+      titleController.addListener(listener);
+      return () => titleController.removeListener(listener);
+    }, [titleController]);
+
+    useEffect(() {
+      void listener() {
+        // URLのバリデーションを実行
+        validateForm();
+      }
+
+      urlController.addListener(listener);
+      return () => urlController.removeListener(listener);
+    }, [urlController]);
+
+    // 初回レンダリング時にも必ずバリデーションを実行（ボタンが最初は無効になるように）
+    useEffect(() {
+      // わずかな遅延を入れて確実に初期化後に実行
+      Future.microtask(() {
+        validateForm();
+      });
+      return null;
+    }, const []);
+
+    // フォーム送信処理
+    void submitForm() {
       // バリデーションに問題がなければデータを保存
-      if (titleValidationResult == null && urlValidationResult == null) {
-        // 閉じるアニメーション
+      if (isFormValid.value) {
         closeSheet(true);
+      } else {
+        // バリデーションに失敗した場合は再度検証して表示を更新
+        validateForm();
       }
     }
 
@@ -123,147 +116,75 @@ class AddQrBottomSheet extends HookConsumerWidget {
       FocusScope.of(context).unfocus();
     }
 
-    // ドラッグ処理
-    void handleDrag(DragUpdateDetails details) {
-      // 下方向へのドラッグのみ反応
-      if (details.delta.dy > 0) {
-        dragOffset.value += details.delta.dy;
-        isDragging.value = true;
-      }
-    }
-
-    // ドラッグ終了処理
-    void handleDragEnd(DragEndDetails details) {
-      // 速度が下向きに早い場合や、ある程度下げた場合は閉じる
-      final velocity = details.velocity.pixelsPerSecond.dy;
-
-      if (velocity > 300 || dragOffset.value > 60) {
-        // 速度に基づいて閉じるアニメーションの調整
-        final screenHeight = MediaQuery.of(context).size.height;
-        final initialOffset = dragOffset.value;
-
-        // 閉じるアニメーション時間を速度に合わせて調整
-        final animDuration =
-            velocity > 1000
-                ? const Duration(milliseconds: 100)
-                : const Duration(milliseconds: 200);
-
-        // アニメーションの開始時間を記録
-        final startTime = DateTime.now();
-
-        // アニメーションタイマー
-        Timer.periodic(const Duration(milliseconds: 16), (timer) {
-          final elapsedTime =
-              DateTime.now().difference(startTime).inMilliseconds;
-          final t = (elapsedTime / animDuration.inMilliseconds).clamp(0.0, 1.0);
-
-          // イージング関数で滑らかなアニメーション
-          final easedT = Curves.easeOut.transform(t);
-
-          // 現在位置から画面高さまでのアニメーション
-          dragOffset.value =
-              initialOffset + (screenHeight - initialOffset) * easedT;
-
-          // アニメーション完了時
-          if (t >= 1.0) {
-            timer.cancel();
-            closeSheet(false);
-          }
-        });
-      } else {
-        // 戻るアニメーション
-        final initialOffset = dragOffset.value;
-        const animDuration = Duration(milliseconds: 300);
-
-        // アニメーションの開始時間を記録
-        final startTime = DateTime.now();
-
-        // アニメーションタイマー
-        Timer.periodic(const Duration(milliseconds: 16), (timer) {
-          final elapsedTime =
-              DateTime.now().difference(startTime).inMilliseconds;
-          final t = (elapsedTime / animDuration.inMilliseconds).clamp(0.0, 1.0);
-
-          // スプリングバックのような効果
-          final easedT = Curves.elasticOut.transform(t);
-
-          // 現在位置から0までアニメーション
-          dragOffset.value = initialOffset * (1 - easedT);
-
-          // アニメーション完了時
-          if (t >= 1.0) {
-            timer.cancel();
-            dragOffset.value = 0;
-            isDragging.value = false;
-          }
-        });
-      }
-    }
-
-    return GestureDetector(
-      // シート外のオーバーレイ部分をタップしたら閉じる
-      onTap: () => closeSheet(false),
-      // オーバーレイタップとシート内タップを区別
-      behavior: HitTestBehavior.opaque,
-      child: GestureDetector(
-        // シート内タップイベントの伝播を防止
-        onTap: () {},
-        child: AnimatedOpacity(
-          opacity: isVisible.value ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            transform: Matrix4.translationValues(0, dragOffset.value, 0),
-            // シートを画面いっぱいに表示する（ステータスバー部分を除く）
-            height:
-                MediaQuery.of(context).size.height -
-                MediaQuery.of(context).padding.top,
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBackground,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            // シート全体をドラッグ可能に
-            child: GestureDetector(
-              onVerticalDragUpdate: handleDrag,
-              onVerticalDragEnd: handleDragEnd,
-              // タップでキーボードを閉じる
-              onTap: dismissKeyboard,
-              // タップの伝播を防ぐ
-              behavior: HitTestBehavior.translucent,
-              child: SafeArea(
-                bottom: true,
+    return Stack(
+      children: [
+        // 背景のオーバーレイ部分（タップで閉じる）
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () => closeSheet(false),
+            behavior: HitTestBehavior.opaque,
+          ),
+        ),
+        // 実際のシート部分
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: GestureDetector(
+            // イベントをキャプチャしてシート外へ伝播させない
+            onTap: () {},
+            behavior: HitTestBehavior.opaque,
+            child: Listener(
+              onPointerDown: (_) => dismissKeyboard(),
+              child: Container(
+                // シートを画面いっぱいに表示する（ステータスバー部分を除く）
+                height:
+                    MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBackground,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
                 child: Column(
                   children: [
-                    // ドラッグハンドル
+                    // ヘッダー部分（タイトルとバツボタン）
                     Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.systemGrey4,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 16,
-                      ),
-                      child: Center(
-                        child: Text(
-                          'QRコードを追加',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: CupertinoColors.label,
-                            letterSpacing: -0.5,
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // タイトル
+                          Center(
+                            child: Text(
+                              'QRコードを追加',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: CupertinoColors.label,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
                           ),
-                        ),
+                          // 閉じるボタン（右上）
+                          Positioned(
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () => closeSheet(false),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  CupertinoIcons.xmark,
+                                  color: CupertinoColors.systemGrey,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
@@ -281,7 +202,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               controller: titleController,
                               errorText: titleError.value,
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
 
                             // URL入力
                             InputField(
@@ -291,7 +212,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               errorText: urlError.value,
                               keyboardType: TextInputType.url,
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
 
                             // アイコン選択
                             QRIconSelector(
@@ -300,22 +221,23 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               onIconSelected:
                                   (index) => selectedIconIndex.value = index,
                             ),
-                            // スペーサーを追加して余白を確保
-                            const Spacer(),
                           ],
                         ),
                       ),
                     ),
 
-                    // 追加ボタン
-                    AddQRButton(onPressed: submitForm),
+                    // 追加ボタン - isEnabled状態を明示的に渡す
+                    AddQRButton(
+                      onPressed: submitForm,
+                      isEnabled: isFormValid.value,
+                    ),
                   ],
                 ),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
