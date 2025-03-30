@@ -48,4 +48,21 @@ class QrItemsNotifier extends StateNotifier<List<QrItem>> {
     state = state.where((item) => item.id != id).toList();
     await _storageService.deleteQrItem(id);
   }
+
+  Future<void> updateEmoji(String id, String emoji) async {
+    state =
+        state.map((item) {
+          if (item.id == id) {
+            final updatedItem = QrItem(
+              id: item.id,
+              title: item.title,
+              url: item.url,
+              emoji: emoji,
+            );
+            _storageService.updateQrItem(updatedItem);
+            return updatedItem;
+          }
+          return item;
+        }).toList();
+  }
 }

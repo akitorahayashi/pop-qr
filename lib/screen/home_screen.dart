@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:pop_qr/screen/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
 
 import '../provider/qr_items_provider.dart';
@@ -60,13 +59,13 @@ class HomeScreen extends HookConsumerWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: CupertinoColors.systemBlue,
+                    color: CupertinoColors.activeBlue,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        color: CupertinoColors.systemGrey.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
