@@ -64,11 +64,16 @@ class QrDetailScreen extends HookConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                qrItem.url,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: CupertinoColors.secondaryLabel,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 36),
+                child: Center(
+                  child: Text(
+                    qrItem.url,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
                 ),
               ),
             ],
