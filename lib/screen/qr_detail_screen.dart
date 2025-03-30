@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import '../provider/qr_items_provider.dart';
-import '../model/qr_item.dart';
 
 class QrDetailScreen extends HookConsumerWidget {
   final String id;

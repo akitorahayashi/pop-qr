@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import '../model/qr_item.dart';
+import '../../model/qr_item.dart';
 
 class QrItemCard extends StatelessWidget {
   final QrItem item;
