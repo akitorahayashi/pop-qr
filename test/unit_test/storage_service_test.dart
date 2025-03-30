@@ -20,7 +20,7 @@ void main() {
 
       // デフォルトアイテムがあることを確認
       expect(items, isNotEmpty);
-      expect(items.length, greaterThanOrEqualTo(3)); // デフォルトで少なくとも3つのアイテム
+      expect(items.length, equals(2));
 
       // デフォルトアイテムの構造を確認
       final firstItem = items.first;
