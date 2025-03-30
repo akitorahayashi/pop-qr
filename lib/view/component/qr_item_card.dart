@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../../model/qr_item.dart';
 import '../../provider/qr_items_provider.dart';
-import 'dialog/emoji_input_dialog.dart';
+import '../../resource/emoji_list.dart';
 
 class QRItemCard extends HookConsumerWidget {
   final QrItem item;
@@ -201,7 +201,7 @@ class QRItemCard extends HookConsumerWidget {
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
-                  _showEmojiInputDialog(context, ref);
+                  _showEmojiSelectSheet(context, ref);
                 },
                 child: const Text('絵文字を変更'),
               ),
@@ -229,14 +229,239 @@ class QRItemCard extends HookConsumerWidget {
     );
   }
 
-  void _showEmojiInputDialog(BuildContext context, WidgetRef ref) async {
-    final emoji = await showEmojiInputDialog(
+  void _showEmojiSelectSheet(BuildContext context, WidgetRef ref) {
+    // 絵文字選択シートをインラインで実装
+    showCupertinoModalPopup<void>(
       context: context,
-      initialEmoji: item.emoji,
+      builder:
+          (BuildContext context) => _EmojiSelectBottomSheet(
+            initialEmoji: item.emoji,
+            onEmojiSelected: (emoji) {
+              ref.read(qrItemsProvider.notifier).updateEmoji(item.id, emoji);
+            },
+          ),
     );
+  }
+}
 
-    if (emoji != null) {
-      ref.read(qrItemsProvider.notifier).updateEmoji(item.id, emoji);
+/// QrItemCardクラス内で使用する絵文字選択ボトムシート
+/// 変更が閉じた範囲で影響する内部実装として定義
+class _EmojiSelectBottomSheet extends HookConsumerWidget {
+  final String initialEmoji;
+  final Function(String) onEmojiSelected;
+
+  const _EmojiSelectBottomSheet({
+    required this.initialEmoji,
+    required this.onEmojiSelected,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 現在選択中の絵文字
+    final selectedEmoji = useState<String>(initialEmoji);
+
+    // 現在表示中のカテゴリー
+    final currentCategory = useState<String>(EmojiList.kSocial);
+
+    // 絵文字を選択して閉じる
+    void selectAndClose(String emoji) {
+      onEmojiSelected(emoji);
+      Navigator.of(context).pop();
     }
+
+    // カテゴリーを選択
+    void selectCategory(String category) {
+      currentCategory.value = category;
+      HapticFeedback.lightImpact();
+    }
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        children: [
+          // ヘッダー部分（タイトルと選択中の絵文字表示）
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: CupertinoColors.systemGrey5,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              children: [
+                // ドラッグインジケーター
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.systemGrey4,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  margin: const EdgeInsets.only(bottom: 12),
+                ),
+                Row(
+                  children: [
+                    // 選択中の絵文字表示
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemGrey6,
+                        borderRadius: BorderRadius.circular(23),
+                        border: Border.all(
+                          color: CupertinoColors.activeBlue,
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          selectedEmoji.value,
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // タイトル
+                    const Expanded(
+                      child: Text(
+                        '絵文字を選択',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // 決定ボタン
+                    CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      child: const Text('決定'),
+                      onPressed: () => selectAndClose(selectedEmoji.value),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // カテゴリ選択タブ
+          Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemBackground,
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.systemGrey5.withOpacity(0.5),
+                  offset: const Offset(0, 1),
+                  blurRadius: 2,
+                ),
+              ],
+            ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children:
+                  EmojiList.displayCategories.map((category) {
+                    final isSelected = currentCategory.value == category;
+                    return GestureDetector(
+                      onTap: () => selectCategory(category),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? CupertinoColors.activeBlue
+                                  : CupertinoColors.systemGrey6,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            EmojiList.categoryNames[category]!,
+                            style: TextStyle(
+                              color:
+                                  isSelected
+                                      ? CupertinoColors.white
+                                      : CupertinoColors.label,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+            ),
+          ),
+
+          // 絵文字グリッド
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 6,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount:
+                  EmojiList.categoryEmojis[currentCategory.value]!.length,
+              itemBuilder: (context, index) {
+                final emoji =
+                    EmojiList.categoryEmojis[currentCategory.value]![index];
+                final isSelected = selectedEmoji.value == emoji;
+
+                return GestureDetector(
+                  onTap: () {
+                    selectedEmoji.value = emoji;
+                    HapticFeedback.selectionClick();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.systemBackground,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? CupertinoColors.activeBlue
+                                : CupertinoColors.systemGrey5,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow:
+                          isSelected
+                              ? [
+                                BoxShadow(
+                                  color: CupertinoColors.activeBlue.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 4,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                              : null,
+                    ),
+                    child: Center(
+                      child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

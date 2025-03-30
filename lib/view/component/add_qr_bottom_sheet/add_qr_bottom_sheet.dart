@@ -4,8 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
 import '../../../provider/qr_items_provider.dart';
+import '../../../resource/emoji_list.dart';
 import '../../../util/validation.dart';
-import '../dialog/emoji_input_dialog.dart';
 import 'component/add_qr_button.dart';
 import 'component/input_field.dart';
 
@@ -18,6 +18,9 @@ class AddQrBottomSheet extends HookConsumerWidget {
     final urlController = useTextEditingController();
     final emojiController = useTextEditingController();
 
+    // 絵文字グリッドのキー
+    final emojiGridKey = useMemoized(() => GlobalKey());
+
     // バリデーションエラーメッセージの状態
     final titleError = useState<String?>(null);
     final urlError = useState<String?>(null);
@@ -28,21 +31,14 @@ class AddQrBottomSheet extends HookConsumerWidget {
     // 現在選択されている絵文字
     final selectedEmoji = useState<String>('📱');
 
-    // リンク先を表す絵文字リスト
-    final linkEmojis = [
-      // SNS
-      '✖️', '📸', '📱', '💬', '👥', '🎮',
-      // ビジネス/仕事
-      '💼', '📊', '📝', '📧', '🗂️', '🔗',
-      // 個人/日常
-      '🔖', '📚', '✍️', '📍', '🏠', '👤',
-      // サービス
-      '🛍️', '🛒', '🔑', '💳', '🎟️', '🏦',
-      // メディア/コンテンツ
-      '🎵', '📺', '🎬', '🎤', '📰', '📷',
-      // その他
-      '🔍', '📲', 'ℹ️', '🌐', '🔔', '⚙️',
-    ];
+    // カテゴリ選択
+    final currentCategory = useState<String>(EmojiList.kSocial);
+
+    // カテゴリ選択処理
+    void selectCategory(String category) {
+      currentCategory.value = category;
+      HapticFeedback.lightImpact();
+    }
 
     // シートを閉じる処理
     void closeSheet(bool saveData) {
@@ -241,19 +237,19 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                     const SizedBox(width: 12),
                                     // 選択中の絵文字表示 + 入力可能なフィールド
                                     GestureDetector(
-                                      onTap: () async {
-                                        // 新しい絵文字入力ダイアログを表示
-                                        final emoji =
-                                            await showEmojiInputDialog(
-                                              context: context,
-                                              initialEmoji: selectedEmoji.value,
-                                            );
-
-                                        // 絵文字が選択された場合のみ更新
-                                        if (emoji != null) {
-                                          selectedEmoji.value = emoji;
-                                          setEmoji(emoji);
-                                        }
+                                      onTap: () {
+                                        // 絵文字グリッドにフォーカスを移動
+                                        dismissKeyboard();
+                                        // タップ時のフィードバック
+                                        HapticFeedback.lightImpact();
+                                        // 自動スクロールで絵文字選択エリアを表示
+                                        Scrollable.ensureVisible(
+                                          context,
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          curve: Curves.easeInOut,
+                                        );
                                       },
                                       child: Container(
                                         width: 42,
@@ -278,23 +274,6 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                         ),
                                       ),
                                     ),
-                                    // テキストフィールドを削除し、代わりにヒントを表示
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 12,
-                                        ),
-                                        child: Text(
-                                          'タップして絵文字を入力、または下から選択',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color:
-                                                CupertinoColors.secondaryLabel,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 12),
@@ -309,7 +288,77 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
+
+                                // カテゴリ選択タブ
                                 Container(
+                                  height: 40,
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    children:
+                                        EmojiList.displayCategories.map((
+                                          category,
+                                        ) {
+                                          final isSelected =
+                                              currentCategory.value == category;
+                                          return GestureDetector(
+                                            onTap:
+                                                () => selectCategory(category),
+                                            child: Container(
+                                              margin: const EdgeInsets.only(
+                                                right: 8,
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    isSelected
+                                                        ? CupertinoColors
+                                                            .activeBlue
+                                                        : CupertinoColors
+                                                            .systemGrey6,
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color:
+                                                      isSelected
+                                                          ? CupertinoColors
+                                                              .activeBlue
+                                                          : CupertinoColors
+                                                              .systemGrey5,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  EmojiList
+                                                      .categoryNames[category]!,
+                                                  style: TextStyle(
+                                                    color:
+                                                        isSelected
+                                                            ? CupertinoColors
+                                                                .white
+                                                            : CupertinoColors
+                                                                .label,
+                                                    fontWeight:
+                                                        isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.normal,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                  ),
+                                ),
+
+                                // 絵文字グリッド
+                                Container(
+                                  key: emojiGridKey,
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color: CupertinoColors.systemGrey6,
@@ -323,7 +372,9 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                         spacing: 8,
                                         runSpacing: 8,
                                         children:
-                                            linkEmojis
+                                            EmojiList
+                                                .categoryEmojis[currentCategory
+                                                    .value]!
                                                 .map(
                                                   (emoji) => GestureDetector(
                                                     onTap: () {

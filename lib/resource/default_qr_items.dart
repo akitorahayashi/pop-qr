@@ -13,7 +13,7 @@ class DefaultQrItems {
         id: _uuid.v4(),
         title: 'X（旧Twitter）',
         url: 'https://x.com',
-        emoji: '✖️',
+        emoji: '🐤',
       ),
 
       // LINE
