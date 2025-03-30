@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter/services.dart';
 
 import '../../provider/qr_items_provider.dart';
 import '../../util/validation.dart';
 import 'component/add_qr_button.dart';
-import 'component/qr_icon_selector.dart';
 import 'component/input_field.dart';
-import 'component/qr_icon_data.dart';
 
 class AddQrBottomSheet extends HookConsumerWidget {
   const AddQrBottomSheet({super.key});
@@ -16,7 +15,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final titleController = useTextEditingController();
     final urlController = useTextEditingController();
-    final selectedIconIndex = useState(0);
+    final emojiController = useTextEditingController();
 
     // バリデーションエラーメッセージの状態
     final titleError = useState<String?>(null);
@@ -25,19 +24,27 @@ class AddQrBottomSheet extends HookConsumerWidget {
     // フォームが有効かどうかを管理
     final isFormValid = useState(false);
 
-    final availableIcons = [
-      QRIconData(CupertinoIcons.link, 'link'),
-      QRIconData(CupertinoIcons.globe, 'globe'),
-      QRIconData(CupertinoIcons.device_phone_portrait, 'phone'),
-      QRIconData(CupertinoIcons.briefcase, 'briefcase'),
-      QRIconData(CupertinoIcons.camera, 'camera'),
-      QRIconData(CupertinoIcons.game_controller, 'game'),
-      QRIconData(CupertinoIcons.music_note, 'music'),
-      QRIconData(CupertinoIcons.book, 'book'),
-      QRIconData(CupertinoIcons.chat_bubble, 'chat'),
-      QRIconData(CupertinoIcons.cart, 'cart'),
-      QRIconData(CupertinoIcons.desktopcomputer, 'computer'),
-      QRIconData(CupertinoIcons.person, 'person'),
+    // 現在選択されている絵文字
+    final selectedEmoji = useState<String>('📱');
+
+    // リンク先を表す絵文字リスト
+    final linkEmojis = [
+      // ウェブサイト/一般
+      '🌐', '💻', '📱',
+      // ショッピング
+      '🛒', '🛍️', '💳',
+      // エンタメ/メディア
+      '🎬', '📺', '🎮', '🎵', '📚',
+      // 飲食
+      '🍽️', '☕', '🍕',
+      // 場所/旅行
+      '📍', '🏨', '✈️', '🚗',
+      // ビジネス
+      '💼', '📊', '🏢',
+      // SNS/通信
+      '📸', '💬', '📧',
+      // その他
+      '🔍', 'ℹ️', '🔗',
     ];
 
     // シートを閉じる処理
@@ -48,7 +55,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
             .addItem(
               title: titleController.text,
               url: urlController.text,
-              icon: availableIcons[selectedIconIndex.value].name,
+              emoji: selectedEmoji.value,
             );
       }
       Navigator.of(context).pop();
@@ -70,7 +77,13 @@ class AddQrBottomSheet extends HookConsumerWidget {
           titleValidationResult == null && urlValidationResult == null;
     }
 
-    // テキスト変更時のリスナー（デバウンス処理付き）
+    // 選択した絵文字を入力欄に反映
+    void setEmoji(String emoji) {
+      emojiController.text = emoji;
+      selectedEmoji.value = emoji; // 選択状態を更新
+    }
+
+    // テキスト変更時のリスナー
     useEffect(() {
       void listener() {
         // タイトルのバリデーションを実行
@@ -91,9 +104,8 @@ class AddQrBottomSheet extends HookConsumerWidget {
       return () => urlController.removeListener(listener);
     }, [urlController]);
 
-    // 初回レンダリング時にも必ずバリデーションを実行（ボタンが最初は無効になるように）
+    // 初回レンダリング時にも必ずバリデーションを実行
     useEffect(() {
-      // わずかな遅延を入れて確実に初期化後に実行
       Future.microtask(() {
         validateForm();
       });
@@ -188,9 +200,10 @@ class AddQrBottomSheet extends HookConsumerWidget {
                       ),
                     ),
 
-                    // 入力フォーム部分
+                    // 入力フォーム部分（スクロール可能）
                     Expanded(
-                      child: Padding(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,19 +227,258 @@ class AddQrBottomSheet extends HookConsumerWidget {
                             ),
                             const SizedBox(height: 24),
 
-                            // アイコン選択
-                            QRIconSelector(
-                              icons: availableIcons,
-                              selectedIndex: selectedIconIndex.value,
-                              onIconSelected:
-                                  (index) => selectedIconIndex.value = index,
+                            // 絵文字入力
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      '絵文字',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: CupertinoColors.label,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // 選択中の絵文字表示 + 入力可能なフィールド
+                                    GestureDetector(
+                                      onTap: () {
+                                        // フォーカスを当てることでキーボードを表示
+                                        final emojiTextController =
+                                            TextEditingController(
+                                              text: selectedEmoji.value,
+                                            );
+                                        showCupertinoDialog(
+                                          context: context,
+                                          barrierDismissible: true,
+                                          builder: (context) {
+                                            return CupertinoAlertDialog(
+                                              title: const Text('絵文字を入力'),
+                                              content: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8.0,
+                                                    ),
+                                                child: CupertinoTextField(
+                                                  controller:
+                                                      emojiTextController,
+                                                  style: const TextStyle(
+                                                    fontSize: 24,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                  autofocus: true,
+                                                  onChanged: (value) {
+                                                    if (value.isNotEmpty) {
+                                                      String firstChar =
+                                                          value
+                                                              .characters
+                                                              .first;
+                                                      if (value.length > 1) {
+                                                        // 1文字のみ使用するように制限
+                                                        emojiTextController
+                                                            .text = firstChar;
+                                                        emojiTextController
+                                                                .selection =
+                                                            TextSelection.collapsed(
+                                                              offset:
+                                                                  firstChar
+                                                                      .length,
+                                                            );
+                                                      }
+                                                    }
+                                                  },
+                                                ),
+                                              ),
+                                              actions: [
+                                                CupertinoDialogAction(
+                                                  child: const Text('キャンセル'),
+                                                  onPressed:
+                                                      () => Navigator.pop(
+                                                        context,
+                                                      ),
+                                                ),
+                                                CupertinoDialogAction(
+                                                  child: const Text('決定'),
+                                                  onPressed: () {
+                                                    final text =
+                                                        emojiTextController
+                                                            .text;
+                                                    if (text.isNotEmpty) {
+                                                      // ダイアログを閉じた後に状態を更新
+                                                      Navigator.pop(context);
+                                                      // 絵文字を更新
+                                                      WidgetsBinding.instance
+                                                          .addPostFrameCallback(
+                                                            (_) {
+                                                              selectedEmoji
+                                                                  .value = text;
+                                                              setEmoji(text);
+                                                            },
+                                                          );
+                                                    } else {
+                                                      Navigator.pop(context);
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Container(
+                                        width: 42,
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                          color: CupertinoColors.systemGrey6,
+                                          borderRadius: BorderRadius.circular(
+                                            21,
+                                          ),
+                                          border: Border.all(
+                                            color: CupertinoColors.systemGrey4,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            selectedEmoji.value,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // テキストフィールドを削除し、代わりにヒントを表示
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 12,
+                                        ),
+                                        child: Text(
+                                          'タップして絵文字を入力、または下から選択',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color:
+                                                CupertinoColors.secondaryLabel,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+
+                                // 絵文字選択グリッド
+                                Text(
+                                  'リンクを表す絵文字',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: CupertinoColors.secondaryLabel,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: CupertinoColors.systemGrey6,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final itemSize =
+                                          (constraints.maxWidth - 8 * 5) / 6;
+                                      return Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children:
+                                            linkEmojis
+                                                .map(
+                                                  (emoji) => GestureDetector(
+                                                    onTap: () {
+                                                      setEmoji(emoji);
+                                                      // タップ時のハプティックフィードバック
+                                                      HapticFeedback.selectionClick();
+                                                    },
+                                                    child: AnimatedContainer(
+                                                      duration: const Duration(
+                                                        milliseconds: 200,
+                                                      ),
+                                                      width: itemSize,
+                                                      height: itemSize,
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            CupertinoColors
+                                                                .systemBackground,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              6,
+                                                            ),
+                                                        border: Border.all(
+                                                          color:
+                                                              selectedEmoji
+                                                                          .value ==
+                                                                      emoji
+                                                                  ? CupertinoColors
+                                                                      .activeBlue
+                                                                  : CupertinoColors
+                                                                      .systemGrey5,
+                                                          width:
+                                                              selectedEmoji
+                                                                          .value ==
+                                                                      emoji
+                                                                  ? 2
+                                                                  : 1,
+                                                        ),
+                                                        boxShadow:
+                                                            selectedEmoji
+                                                                        .value ==
+                                                                    emoji
+                                                                ? [
+                                                                  BoxShadow(
+                                                                    color: CupertinoColors
+                                                                        .activeBlue
+                                                                        .withOpacity(
+                                                                          0.3,
+                                                                        ),
+                                                                    blurRadius:
+                                                                        4,
+                                                                    spreadRadius:
+                                                                        1,
+                                                                  ),
+                                                                ]
+                                                                : null,
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          emoji,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 24,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                                .toList(),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                // ボタンの上に余白を追加
+                                const SizedBox(height: 24),
+                              ],
                             ),
                           ],
                         ),
                       ),
                     ),
 
-                    // 追加ボタン - isEnabled状態を明示的に渡す
+                    // 追加ボタン
                     AddQRButton(
                       onPressed: submitForm,
                       isEnabled: isFormValid.value,

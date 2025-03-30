@@ -1,93 +1,83 @@
 import 'package:flutter/cupertino.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../model/qr_item.dart';
 
-class QrItemCard extends StatelessWidget {
+class QRItemCard extends HookConsumerWidget {
   final QrItem item;
-  final VoidCallback onTap;
 
-  const QrItemCard({Key? key, required this.item, required this.onTap})
-    : super(key: key);
-
-  // アイコン名からIconDataを取得するヘルパーメソッド
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'link':
-        return CupertinoIcons.link;
-      case 'globe':
-        return CupertinoIcons.globe;
-      case 'phone':
-        return CupertinoIcons.device_phone_portrait;
-      case 'briefcase':
-        return CupertinoIcons.briefcase;
-      case 'camera':
-        return CupertinoIcons.camera;
-      case 'game':
-        return CupertinoIcons.game_controller;
-      case 'music':
-        return CupertinoIcons.music_note;
-      case 'book':
-        return CupertinoIcons.book;
-      case 'chat':
-        return CupertinoIcons.chat_bubble;
-      case 'cart':
-        return CupertinoIcons.cart;
-      case 'computer':
-        return CupertinoIcons.desktopcomputer;
-      case 'person':
-        return CupertinoIcons.person;
-      default:
-        return CupertinoIcons.link;
-    }
-  }
+  const QRItemCard({super.key, required this.item});
 
   @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-      padding: EdgeInsets.zero,
-      onPressed: onTap,
-      child: Hero(
-        tag: 'qr_card_${item.id}',
-        child: AspectRatio(
-          aspectRatio: 1, // 正方形を維持
-          child: Container(
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBackground,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: CupertinoColors.systemGrey.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () {
+        // ディテール画面へ遷移
+        context.go('/qr/${item.id}');
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: CupertinoColors.systemBackground,
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.systemGrey4.withOpacity(0.2),
+              offset: const Offset(0, 2),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // 絵文字の表示
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  borderRadius: BorderRadius.circular(25),
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _getIconData(item.icon),
-                    size: 40,
-                    color: CupertinoColors.systemBlue,
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+                child: Center(
+                  child: Text(item.emoji, style: const TextStyle(fontSize: 28)),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              // テキスト部分
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.url,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: CupertinoColors.secondaryLabel,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                CupertinoIcons.chevron_right,
+                color: CupertinoColors.systemGrey2,
+                size: 20,
+              ),
+            ],
           ),
         ),
       ),

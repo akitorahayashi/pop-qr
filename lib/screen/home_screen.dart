@@ -47,10 +47,7 @@ class HomeScreen extends HookConsumerWidget {
                   itemCount: qrItems.length,
                   itemBuilder: (context, index) {
                     final item = qrItems[index];
-                    return QrItemCard(
-                      item: item,
-                      onTap: () => context.go('/qr/${item.id}'),
-                    );
+                    return QRItemCard(item: item);
                   },
                 ),
             Positioned(

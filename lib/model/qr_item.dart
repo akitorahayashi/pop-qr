@@ -12,7 +12,7 @@ class QrItem with _$QrItem {
     required String id,
     required String title,
     required String url,
-    required String icon,
+    required String emoji,
   }) = _QrItem;
 
   factory QrItem.fromJson(Map<String, dynamic> json) => _$QrItemFromJson(json);

@@ -31,9 +31,14 @@ class QrItemsNotifier extends StateNotifier<List<QrItem>> {
   Future<void> addItem({
     required String title,
     required String url,
-    required String icon,
+    required String emoji,
   }) async {
-    final newItem = QrItem(id: _uuid.v4(), title: title, url: url, icon: icon);
+    final newItem = QrItem(
+      id: _uuid.v4(),
+      title: title,
+      url: url,
+      emoji: emoji,
+    );
 
     state = [...state, newItem];
     await _storageService.addQrItem(newItem);
