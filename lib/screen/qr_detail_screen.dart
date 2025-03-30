@@ -65,11 +65,28 @@ class QrDetailScreen extends HookConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    qrItem.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 36),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          qrItem.emoji,
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            qrItem.title,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            softWrap: true,
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),

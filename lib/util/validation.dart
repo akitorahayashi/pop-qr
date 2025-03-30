@@ -33,8 +33,8 @@ class Validation {
       return 'タイトルを入力してください';
     }
 
-    if (value.length > 50) {
-      return 'タイトルは50文字以内で入力してください';
+    if (value.length > 20) {
+      return 'タイトルは20文字以内で入力してください';
     }
 
     return null;
