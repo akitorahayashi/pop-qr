@@ -139,8 +139,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    // コピーアイコンが表示されることでモーダルが表示されていることを検証
-    expect(find.byKey(const ValueKey('copy')), findsOneWidget);
+    // リンクアイコンが表示されることでモーダルが表示されていることを検証
+    expect(find.byKey(const ValueKey('link')), findsOneWidget);
   });
 
   testWidgets('初回起動時にQRアイテムが空の場合は適切なメッセージが表示されること', (

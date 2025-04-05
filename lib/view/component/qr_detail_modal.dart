@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../model/qr_item.dart';
 
@@ -46,8 +47,38 @@ class _QrDetailModalContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // コピーアイコンの状態管理
-    final isCopied = useState(false);
+    // URL開く処理の状態管理
+    final isOpening = useState(false);
+
+    // URLを開く関数
+    Future<void> launchUrlInApp() async {
+      final url = Uri.parse(qrItem.url);
+
+      // URL開始中に設定
+      isOpening.value = true;
+
+      try {
+        // URLを開く
+        await launchUrl(
+          url,
+          mode: LaunchMode.inAppWebView,
+          webViewConfiguration: const WebViewConfiguration(
+            enableJavaScript: true,
+            enableDomStorage: true,
+          ),
+        );
+      } catch (e) {
+        // エラー処理 - オーバーレイでメッセージを表示
+        if (context.mounted) {
+          _showMessage(context, 'URLを開けませんでした');
+        }
+      } finally {
+        // 処理完了したら状態リセット
+        if (context.mounted) {
+          isOpening.value = false;
+        }
+      }
+    }
 
     return GestureDetector(
       // 背景タップでモーダルを閉じる
@@ -123,26 +154,16 @@ class _QrDetailModalContent extends HookConsumerWidget {
                 // URL表示部分
                 GestureDetector(
                   onTap: () {
-                    // URLをクリップボードにコピー
-                    Clipboard.setData(ClipboardData(text: qrItem.url));
-
-                    // アイコンをチェックマークに変更
-                    isCopied.value = true;
-
-                    // コピー成功メッセージ表示
-                    _showCopiedMessage(context);
-
-                    // 2秒後にアイコンを元に戻す
-                    Future.delayed(const Duration(seconds: 2), () {
-                      if (context.mounted) {
-                        isCopied.value = false;
-                      }
-                    });
+                    if (!isOpening.value) {
+                      // ハプティックフィードバック
+                      HapticFeedback.lightImpact();
+                      launchUrlInApp();
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // コピーアイコン
+                      // リンクアイコン
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         transitionBuilder: (child, animation) {
@@ -152,16 +173,14 @@ class _QrDetailModalContent extends HookConsumerWidget {
                           );
                         },
                         child:
-                            isCopied.value
-                                ? const Icon(
-                                  CupertinoIcons.checkmark,
-                                  key: ValueKey('check'),
-                                  size: 18,
-                                  color: CupertinoColors.systemGrey,
+                            isOpening.value
+                                ? const CupertinoActivityIndicator(
+                                  key: ValueKey('loading'),
+                                  radius: 8,
                                 )
                                 : const Icon(
-                                  CupertinoIcons.doc_on_doc,
-                                  key: ValueKey('copy'),
+                                  CupertinoIcons.link,
+                                  key: ValueKey('link'),
                                   size: 18,
                                   color: CupertinoColors.systemGrey,
                                 ),
@@ -190,8 +209,8 @@ class _QrDetailModalContent extends HookConsumerWidget {
     );
   }
 
-  /// コピー成功メッセージを表示
-  void _showCopiedMessage(BuildContext context) {
+  /// メッセージをオーバーレイで表示
+  void _showMessage(BuildContext context, String message) {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
       builder:
@@ -218,9 +237,9 @@ class _QrDetailModalContent extends HookConsumerWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  'URLをコピーしました',
-                  style: TextStyle(color: CupertinoColors.white),
+                child: Text(
+                  message,
+                  style: const TextStyle(color: CupertinoColors.white),
                 ),
               ),
             ),
@@ -233,8 +252,5 @@ class _QrDetailModalContent extends HookConsumerWidget {
     Future.delayed(const Duration(seconds: 2), () {
       overlayEntry.remove();
     });
-
-    // ハプティックフィードバック
-    HapticFeedback.lightImpact();
   }
 }

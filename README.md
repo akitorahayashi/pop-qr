@@ -28,56 +28,53 @@ UI → Provider → StorageService → Provider → UI（更新）
 ```
 pop_qr/
 ├── lib/
-│   ├── app.dart                    # アプリケーションのルート
-│   ├── main.dart                   # エントリーポイント
+│   ├── app.dart
+│   ├── main.dart
 │   │
 │   ├── model/                      
-│   │   ├── qr_item.dart            # QRコードモデルの定義
-│   │   └── generate/               # 自動生成コード
+│   │   ├── qr_item.dart
+│   │   └── generate/
 │   │
 │   ├── provider/                   
-│   │   └── qr_items_provider.dart  # QRコードアイテムの状態管理
+│   │   └── qr_items_provider.dart
 │   │
 │   ├── service/                    
-│   │   └── storage_service.dart    # データの永続化
+│   │   └── storage_service.dart
 │   │
 │   ├── view/                       
-│   │   ├── home_screen.dart        # ホーム画面
-│   │   ├── error_view.dart         # エラー表示画面
+│   │   ├── qr_code_library.dart
 │   │   │
 │   │   ├── component/              
-│   │   │   ├── qr_item_card.dart   # QRコードアイテムカード
-│   │   │   └── qr_detail_modal.dart # QRコードの詳細のポップアップ
+│   │   │   ├── qr_item_card.dart
+│   │   │   ├── qr_detail_modal.dart
+│   │   │   ├── qr_icon_selector.dart
+│   │   │   │
+│   │   │   └── add_qr_bottom_sheet/  
+│   │   │       ├── add_qr_bottom_sheet.dart
+│   │   │       └── component/          
+│   │   │           ├── add_qr_button.dart
+│   │   │           ├── pq_input_field.dart
+│   │   │           └── qr_icon_data.dart
 │   │   │
-│   │   └── add_qr_bottom_sheet/    
-│   │       ├── add_qr_bottom_sheet.dart # QRコードのデータを追加するシート
-│   │       └── component/          
-│   │           ├── add_qr_button.dart  # 追加ボタンコンポーネント
-│   │           ├── input_field.dart    # 入力フィールドコンポーネント
-│   │           ├── qr_icon_selector.dart # アイコン選択コンポーネント
-│   │           └── qr_icon_data.dart   # アイコンデータ定義
+│   │   └── sub_view/               
+│   │       └── error_view.dart
 │   │
 │   ├── resource/                   
-│   │   ├── default_qr_items.dart   # デフォルトQRアイテム
-│   │   └── emoji_list.dart         # 絵文字リスト
+│   │   ├── default_qr_items.dart
+│   │   └── emoji_list.dart
 │   │
 │   └── util/                       
-│       └── validation.dart         # 入力検証ユーティリティ
+│       └── pq_validation.dart
 │
 ├── test/                          
-│   ├── unit_test/                 # ユニットテスト
-│   └── widget_test/               # ウィジェットテスト
+│   ├── unit_test/
+│   └── widget_test/
+│       ├── widget_test.dart
+│       ├── qr_code_library_test.dart
+│       ├── qr_item_card_test.dart
+│       └── add_qr_bottom_sheet_test.dart
 │
-├── assets/                        # アセットファイル（画像など）
-├── .github/workflows/            # GitHub Actions ワークフロー
-├── android/                      # Android プラットフォーム固有のコード
-├── ios/                          # iOS プラットフォーム固有のコード
-├── macos/                        # macOS プラットフォーム固有のコード
-├── web/                          # Webプラットフォーム固有のコード
-├── linux/                        # Linux プラットフォーム固有のコード
-├── windows/                      # Windows プラットフォーム固有のコード
-├── build.yaml                    # freezedによってスキャンする範囲の限定
-└── pubspec.yaml                  # 依存関係管理
+└── pubspec.yaml
 ```
 
 ## 使用パッケージ
@@ -97,6 +94,9 @@ pop_qr/
 
 ### データ永続化
 - **shared_preferences**
+
+### 外部連携
+- **url_launcher** # QRコードのURLを開くため
 
 ### その他
 - **uuid**
@@ -118,23 +118,26 @@ GridView.builder(
 )
 ```
 
-### ポップアップ表示によるQRコード詳細
-QRコードカードをタップすると、ポップアップでQRコードを表示します。
+### QRコード詳細のモーダル表示とURL開く機能
+QRコードカードをタップすると、モーダルでQRコードを表示します。URLをタップするとアプリ内ブラウザでそのURLを開きます。
 
 ```dart
-showCupertinoModalPopup(
+showGeneralDialog(
   context: context,
-  builder: (context) => QrDetailModal(item: item),
+  barrierDismissible: true,
+  barrierLabel: "QR Detail",
+  transitionDuration: const Duration(milliseconds: 270),
+  // ...
 );
-```
 
-### QRコード追加機能
-ボトムシートを使用してQRコードを追加できます。
-
-```dart
-showCupertinoModalPopup(
-  context: context,
-  builder: (context) => const AddQrBottomSheet(),
+// URLを開く処理
+await launchUrl(
+  url,
+  mode: LaunchMode.inAppWebView,
+  webViewConfiguration: const WebViewConfiguration(
+    enableJavaScript: true,
+    enableDomStorage: true,
+  ),
 );
 ```
 
@@ -158,13 +161,22 @@ QrItem(
 ),
 ```
 
+## バリデーション
+
+QRコードの追加時には、入力値のバリデーションを行います：
+
+- タイトルは1文字以上20文字以内
+- URLはhttp://またはhttps://で始まる有効なURL形式
+
+バリデーション条件はフォーム下部にグレーテキストで常に表示されます。
+
 ## テスト
 
 ### ユニットテスト
 StorageServiceとQrItemsProviderのテストを実装しています。
 
 ### ウィジェットテスト
-主要なUIコンポーネントの機能テストを実装しています。
+主要なUIコンポーネントの機能テストを実装しています。テストは実際のデバイスを使用しないFlutterのウィジェットテスト環境で実行されます。
 
 ## CI/CD ( flutter-ci.yml )
 

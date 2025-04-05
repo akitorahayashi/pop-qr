@@ -127,8 +127,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    // コピーアイコンが表示されることでモーダルが表示されていることを検証
-    expect(find.byKey(const ValueKey('copy')), findsOneWidget);
+    // リンクアイコンが表示されることでモーダルが表示されていることを検証
+    expect(find.byKey(const ValueKey('link')), findsOneWidget);
   });
 
   testWidgets('QRItemCardを長押しするとアクションシートが表示されること', (WidgetTester tester) async {
