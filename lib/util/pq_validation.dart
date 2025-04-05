@@ -1,6 +1,4 @@
-class Validation {
-  /// URLが有効かどうかを検証するメソッド
-  ///
+class PQValidation {
   /// URLの形式が正しいかどうかをチェックする
   /// 返り値: 有効な場合はnull、無効な場合はエラーメッセージ
   static String? validateUrl(String? value) {
@@ -24,8 +22,6 @@ class Validation {
     }
   }
 
-  /// タイトルが有効かどうかを検証するメソッド
-  ///
   /// タイトルが空でないか、最大長を超えていないかをチェックする
   /// 返り値: 有効な場合はnull、無効な場合はエラーメッセージ
   static String? validateTitle(String? value) {

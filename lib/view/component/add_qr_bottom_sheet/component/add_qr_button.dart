@@ -86,8 +86,8 @@ class _AddQRButtonState extends State<AddQRButton>
         builder: (context, child) {
           return Opacity(
             // ボタン全体の透明度をアニメーションさせる
-            // 無効時: 0.6, 有効時: 1.0
-            opacity: 0.6 + (0.4 * _animationController.value),
+            // 無効時: 0.4, 有効時: 1.0
+            opacity: 0.4 + (0.6 * _animationController.value),
             child: Container(
               decoration: BoxDecoration(
                 // アニメーションするグラデーション
@@ -125,7 +125,7 @@ class _AddQRButtonState extends State<AddQRButton>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Opacity(
-                      opacity: 0.5 + (0.5 * _animationController.value),
+                      opacity: 0.6 + (0.4 * _animationController.value),
                       child: const Icon(
                         CupertinoIcons.add,
                         color: CupertinoColors.white,
@@ -134,7 +134,7 @@ class _AddQRButtonState extends State<AddQRButton>
                     ),
                     const SizedBox(width: 8),
                     Opacity(
-                      opacity: 0.5 + (0.5 * _animationController.value),
+                      opacity: 0.6 + (0.4 * _animationController.value),
                       child: const Text(
                         'QRコードを追加',
                         style: TextStyle(

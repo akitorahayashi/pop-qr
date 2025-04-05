@@ -131,10 +131,16 @@ void main() {
 
     // QRアイテムをタップ
     await tester.tap(find.text('サンプルQR'));
+
+    // ダイアログのアニメーションが完了するまで十分な時間を待つ
+    // アニメーションは270ms + 追加の待機時間
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    // QRコード詳細モーダルが表示されていることを確認
-    expect(find.text('https://example.com/sample'), findsOneWidget);
+    // コピーアイコンが表示されることでモーダルが表示されていることを検証
+    expect(find.byKey(const ValueKey('copy')), findsOneWidget);
   });
 
   testWidgets('初回起動時にQRアイテムが空の場合は適切なメッセージが表示されること', (

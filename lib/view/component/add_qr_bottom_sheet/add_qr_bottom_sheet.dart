@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../provider/qr_items_provider.dart';
 import '../../../resource/emoji_list.dart';
-import '../../../util/validation.dart';
+import '../../../util/pq_validation.dart';
 import 'component/add_qr_button.dart';
 import 'component/pq_input_field.dart';
 
@@ -56,10 +56,10 @@ class AddQrBottomSheet extends HookConsumerWidget {
 
     // フォームの入力内容を検証
     void validateForm() {
-      final titleValidationResult = Validation.validateTitle(
+      final titleValidationResult = PQValidation.validateTitle(
         titleController.text,
       );
-      final urlValidationResult = Validation.validateUrl(urlController.text);
+      final urlValidationResult = PQValidation.validateUrl(urlController.text);
 
       // エラーメッセージを設定
       titleError.value = titleValidationResult;
@@ -206,7 +206,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               label: 'タイトル',
                               placeholder: 'タイトルを入力',
                               controller: titleController,
-                              errorText: titleError.value,
+                              validationContent: '1文字以上20文字以内で入力してください',
                             ),
                             const SizedBox(height: 24),
 
@@ -215,8 +215,9 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               label: 'URL',
                               placeholder: 'URLを入力 (例: https://example.com)',
                               controller: urlController,
-                              errorText: urlError.value,
                               keyboardType: TextInputType.url,
+                              validationContent:
+                                  'http://またはhttps://で始まるURLを入力してください',
                             ),
                             const SizedBox(height: 24),
 

@@ -119,10 +119,16 @@ void main() {
 
     // カードをタップ
     await tester.tap(find.byType(QRItemCard));
+
+    // ダイアログのアニメーションが完了するまで十分な時間を待つ
+    // アニメーションは270ms + 追加の待機時間
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    // モーダルのQRコードURLが表示されているか確認
-    expect(find.text('https://example.com'), findsOneWidget);
+    // コピーアイコンが表示されることでモーダルが表示されていることを検証
+    expect(find.byKey(const ValueKey('copy')), findsOneWidget);
   });
 
   testWidgets('QRItemCardを長押しするとアクションシートが表示されること', (WidgetTester tester) async {

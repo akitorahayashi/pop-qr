@@ -5,16 +5,16 @@ class PQInputField extends StatelessWidget {
   final String label;
   final String placeholder;
   final TextEditingController controller;
-  final String? errorText;
   final TextInputType keyboardType;
+  final String validationContent;
 
   const PQInputField({
     super.key,
     required this.label,
     required this.placeholder,
     required this.controller,
-    this.errorText,
     this.keyboardType = TextInputType.text,
+    required this.validationContent,
   });
 
   @override
@@ -46,24 +46,19 @@ class PQInputField extends StatelessWidget {
               decoration: BoxDecoration(
                 color: CupertinoColors.systemGrey6,
                 borderRadius: BorderRadius.circular(10),
-                border:
-                    errorText != null
-                        ? Border.all(color: CupertinoColors.systemRed)
-                        : Border.all(color: CupertinoColors.systemGrey5),
+                border: Border.all(color: CupertinoColors.systemGrey5),
               ),
             ),
-            if (errorText != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 4),
-                child: Text(
-                  errorText!,
-                  style: const TextStyle(
-                    color: CupertinoColors.systemRed,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, left: 1),
+              child: Text(
+                validationContent,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.systemGrey,
                 ),
               ),
+            ),
           ],
         ),
       ],
