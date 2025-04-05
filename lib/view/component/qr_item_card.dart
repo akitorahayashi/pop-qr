@@ -182,7 +182,7 @@ class QRItemCard extends HookConsumerWidget {
                   const SizedBox(height: 12),
                   // タイトル
                   AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 30),
+                    duration: const Duration(milliseconds: 100),
                     transitionBuilder: (
                       Widget child,
                       Animation<double> animation,
@@ -337,7 +337,6 @@ class QRItemCard extends HookConsumerWidget {
               ),
               actions: <CupertinoDialogAction>[
                 CupertinoDialogAction(
-                  isDestructiveAction: true,
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -345,6 +344,7 @@ class QRItemCard extends HookConsumerWidget {
                 ),
                 CupertinoDialogAction(
                   isDefaultAction: true,
+                  // バリデーションに成功したときだけアクティブにする
                   onPressed:
                       validationError == null
                           ? () {
@@ -357,7 +357,20 @@ class QRItemCard extends HookConsumerWidget {
                             Navigator.pop(context);
                           }
                           : null,
-                  child: const Text('保存'),
+                  // 色のアニメーション
+                  textStyle:
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 300),
+                        style: TextStyle(
+                          color:
+                              validationError == null
+                                  ? CupertinoColors.activeBlue
+                                  : CupertinoColors.systemGrey,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        child: const Text('確定'),
+                      ).style,
+                  child: const Text('確定'),
                 ),
               ],
             );
@@ -409,7 +422,6 @@ class QRItemCard extends HookConsumerWidget {
               ),
               actions: <CupertinoDialogAction>[
                 CupertinoDialogAction(
-                  isDestructiveAction: true,
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -417,6 +429,7 @@ class QRItemCard extends HookConsumerWidget {
                 ),
                 CupertinoDialogAction(
                   isDefaultAction: true,
+                  // バリデーションに成功したときだけアクティブにする
                   onPressed:
                       validationError == null
                           ? () {
@@ -429,7 +442,20 @@ class QRItemCard extends HookConsumerWidget {
                             Navigator.pop(context);
                           }
                           : null,
-                  child: const Text('保存'),
+                  // 色のアニメーション
+                  textStyle:
+                      AnimatedDefaultTextStyle.new(
+                        duration: const Duration(milliseconds: 300),
+                        style: TextStyle(
+                          color:
+                              validationError == null
+                                  ? CupertinoColors.activeBlue
+                                  : CupertinoColors.systemGrey3,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        child: const Text('確定'),
+                      ).style,
+                  child: const Text('確定'),
                 ),
               ],
             );
@@ -530,14 +556,28 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
                         color: CupertinoColors.systemGrey6,
                         borderRadius: BorderRadius.circular(23),
                         border: Border.all(
-                          color: CupertinoColors.activeBlue,
+                          color: CupertinoColors.systemGrey4,
                           width: 2,
                         ),
                       ),
                       child: Center(
-                        child: Text(
-                          selectedEmoji.value,
-                          style: const TextStyle(fontSize: 28),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 150),
+                          transitionBuilder: (
+                            Widget child,
+                            Animation<double> animation,
+                          ) {
+                            // フェードのアニメーション
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                          child: Text(
+                            selectedEmoji.value,
+                            key: ValueKey<String>(selectedEmoji.value),
+                            style: const TextStyle(fontSize: 24),
+                          ),
                         ),
                       ),
                     ),
