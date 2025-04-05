@@ -444,7 +444,7 @@ class QRItemCard extends HookConsumerWidget {
                           : null,
                   // 色のアニメーション
                   textStyle:
-                      AnimatedDefaultTextStyle.new(
+                      AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 300),
                         style: TextStyle(
                           color:
