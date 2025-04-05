@@ -351,7 +351,7 @@ void main() {
     expect(find.byType(CupertinoAlertDialog), findsOneWidget);
 
     // 保存ボタンとキャンセルボタンが表示されていることを確認
-    expect(find.text('保存'), findsOneWidget);
+    expect(find.text('確定'), findsOneWidget);
     expect(find.text('キャンセル'), findsOneWidget);
   });
 
@@ -402,7 +402,7 @@ void main() {
     expect(find.byType(CupertinoAlertDialog), findsOneWidget);
 
     // 保存ボタンとキャンセルボタンが表示されていることを確認
-    expect(find.text('保存'), findsOneWidget);
+    expect(find.text('確定'), findsOneWidget);
     expect(find.text('キャンセル'), findsOneWidget);
   });
 
@@ -450,7 +450,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 保存をタップ
-    await tester.tap(find.widgetWithText(CupertinoDialogAction, '保存'));
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, '確定'));
     await tester.pumpAndSettle();
 
     // タイトルが更新されたことを確認
@@ -506,7 +506,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 保存をタップ
-    await tester.tap(find.widgetWithText(CupertinoDialogAction, '保存'));
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, '確定'));
     await tester.pumpAndSettle();
 
     // URLが更新されたことを確認
