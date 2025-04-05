@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pop_qr/model/qr_item.dart';
 import 'package:pop_qr/provider/qr_items_provider.dart';
-import 'package:pop_qr/view/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
-import 'package:pop_qr/view/add_qr_bottom_sheet/component/add_qr_button.dart';
+import 'package:pop_qr/view/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
+import 'package:pop_qr/view/component/add_qr_bottom_sheet/component/add_qr_button.dart';
 
 // テスト用のQrItemsNotifier
 class TestQrItems extends AsyncNotifier<List<QrItem>>

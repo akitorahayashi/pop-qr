@@ -3,11 +3,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
-import '../../provider/qr_items_provider.dart';
-import '../../resource/emoji_list.dart';
-import '../../util/validation.dart';
+import '../../../provider/qr_items_provider.dart';
+import '../../../resource/emoji_list.dart';
+import '../../../util/validation.dart';
 import 'component/add_qr_button.dart';
-import 'component/input_field.dart';
+import 'component/pq_input_field.dart';
 
 class AddQrBottomSheet extends HookConsumerWidget {
   const AddQrBottomSheet({super.key});
@@ -193,7 +193,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                       ),
                     ),
 
-                    // 入力フォーム部分（スクロール可能）
+                    // 入力フォーム部分
                     Expanded(
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -202,7 +202,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // タイトル入力
-                            InputField(
+                            PQInputField(
                               label: 'タイトル',
                               placeholder: 'タイトルを入力',
                               controller: titleController,
@@ -211,7 +211,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                             const SizedBox(height: 24),
 
                             // URL入力
-                            InputField(
+                            PQInputField(
                               label: 'URL',
                               placeholder: 'URLを入力 (例: https://example.com)',
                               controller: urlController,
@@ -226,47 +226,51 @@ class AddQrBottomSheet extends HookConsumerWidget {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      '絵文字',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: CupertinoColors.label,
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 12.0,
+                                      ),
+                                      child: Text(
+                                        '絵文字',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: CupertinoColors.label,
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    // 選択中の絵文字表示 + 入力可能なフィールド
-                                    GestureDetector(
-                                      onTap: () {
-                                        // 絵文字グリッドにフォーカスを移動
-                                        dismissKeyboard();
-                                        // タップ時のフィードバック
-                                        HapticFeedback.lightImpact();
-                                        // 自動スクロールで絵文字選択エリアを表示
-                                        Scrollable.ensureVisible(
-                                          context,
-                                          duration: const Duration(
-                                            milliseconds: 300,
-                                          ),
-                                          curve: Curves.easeInOut,
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 42,
-                                        height: 42,
-                                        decoration: BoxDecoration(
-                                          color: CupertinoColors.systemGrey6,
-                                          borderRadius: BorderRadius.circular(
-                                            21,
-                                          ),
-                                          border: Border.all(
-                                            color: CupertinoColors.systemGrey4,
-                                            width: 1,
-                                          ),
+                                    // 選択中の絵文字を表示
+                                    Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                        color: CupertinoColors.systemGrey6,
+                                        borderRadius: BorderRadius.circular(21),
+                                        border: Border.all(
+                                          color: CupertinoColors.systemGrey4,
+                                          width: 1,
                                         ),
-                                        child: Center(
+                                      ),
+                                      child: Center(
+                                        child: AnimatedSwitcher(
+                                          duration: const Duration(
+                                            milliseconds: 150,
+                                          ),
+                                          transitionBuilder: (
+                                            Widget child,
+                                            Animation<double> animation,
+                                          ) {
+                                            // フェードと拡大縮小のアニメーション
+                                            return FadeTransition(
+                                              opacity: animation,
+                                              child: child,
+                                            );
+                                          },
                                           child: Text(
                                             selectedEmoji.value,
+                                            key: ValueKey<String>(
+                                              selectedEmoji.value,
+                                            ),
                                             style: const TextStyle(
                                               fontSize: 24,
                                             ),

@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'qr_icon_data.dart';
+import 'add_qr_bottom_sheet/component/qr_icon_data.dart';
 
 /// アイコン選択コンポーネント
 class QRIconSelector extends StatelessWidget {

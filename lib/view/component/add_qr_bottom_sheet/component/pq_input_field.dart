@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 
 /// 入力フィールドコンポーネント
-class InputField extends StatelessWidget {
+class PQInputField extends StatelessWidget {
   final String label;
   final String placeholder;
   final TextEditingController controller;
   final String? errorText;
   final TextInputType keyboardType;
 
-  const InputField({
+  const PQInputField({
     super.key,
     required this.label,
     required this.placeholder,

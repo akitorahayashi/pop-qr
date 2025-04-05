@@ -15,17 +15,13 @@ QRコードはカード形式で表示され、タップするとモーダルで
 - **データ層**: データの永続化
 
 ### 状態管理
-
-状態管理にはRiverpodを使用しています：
-
 ```
-UI → Provider → Service → Storage → Provider → UI（更新）
+UI → Provider → StorageService → Provider → UI（更新）
 ```
 
 - **UI**: ユーザーの操作を受け付ける
 - **Provider**: 状態を管理する
-- **Service**: データ操作を行う
-- **Storage**: データを保存する
+- **StorageService**: ストレージ操作を行う
 
 ## ディレクトリ構成
 
