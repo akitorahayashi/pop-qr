@@ -6,8 +6,8 @@ import '../provider/qr_items_provider.dart';
 import 'error_view.dart';
 import 'component/qr_item_card.dart';
 
-class HomeScreen extends HookConsumerWidget {
-  const HomeScreen({super.key});
+class QRCodeLibrary extends HookConsumerWidget {
+  const QRCodeLibrary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -18,6 +18,8 @@ class QRItemCard extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // タップ状態を追跡
     final isPressed = useState(false);
+    // タップ処理中かどうかのフラグ
+    final isProcessingTap = useState(false);
     // 削除アニメーション用の状態
     final isRemoving = useState(false);
 
@@ -82,18 +84,44 @@ class QRItemCard extends HookConsumerWidget {
     final cardWidget = GestureDetector(
       // 通常タップでQRコード詳細モーダルを表示
       onTap: () {
-        showQrDetailModal(context: context, qrItem: item);
+        if (isProcessingTap.value) return; // 処理中なら重複実行を防止
+
+        isProcessingTap.value = true;
+        HapticFeedback.selectionClick();
+
+        // 縮小→待機→元に戻る→モーダル表示
+        isPressed.value = true;
+        Future.delayed(const Duration(milliseconds: 100), () {
+          isPressed.value = false;
+          Future.delayed(const Duration(milliseconds: 50), () {
+            isProcessingTap.value = false;
+            if (context.mounted) {
+              showQrDetailModal(context: context, qrItem: item);
+            }
+          });
+        });
       },
       // 長押しでアクションシート
       onLongPress: () {
         _showActionSheet(context, ref, removeController, isRemoving);
+        // アクションシート表示後に元のサイズに戻す
+        isPressed.value = false;
       },
       onTapDown: (_) {
-        isPressed.value = true;
-        HapticFeedback.lightImpact();
+        if (!isProcessingTap.value) {
+          isPressed.value = true;
+          HapticFeedback.lightImpact();
+        }
       },
-      onTapUp: (_) => isPressed.value = false,
-      onTapCancel: () => isPressed.value = false,
+      onTapUp: (_) {
+        if (!isProcessingTap.value) {
+          isPressed.value = false;
+        }
+      },
+      onTapCancel: () {
+        isPressed.value = false;
+        isProcessingTap.value = false;
+      },
       child: AnimatedScale(
         scale: isPressed.value ? 0.9 : 1.0,
         duration: const Duration(milliseconds: 150),

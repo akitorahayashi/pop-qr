@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 /// エラー表示用のウィジェット
 ///
-/// エラー内容を視覚的に伝え、再試行機能を提供します。
+/// エラー内容を視覚的に伝え、再試行機能を提供
 class ErrorView extends StatelessWidget {
   final String errorMessage;
   final VoidCallback onRetry;

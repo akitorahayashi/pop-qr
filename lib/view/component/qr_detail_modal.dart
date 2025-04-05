@@ -18,7 +18,7 @@ void showQrDetailModal({
     barrierDismissible: true,
     barrierLabel: "QR Detail",
     barrierColor: CupertinoColors.black.withValues(alpha: 0.6),
-    transitionDuration: const Duration(milliseconds: 300),
+    transitionDuration: const Duration(milliseconds: 270),
     pageBuilder: (_, __, ___) => Container(), // Will not be used
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       // アニメーション効果の定義

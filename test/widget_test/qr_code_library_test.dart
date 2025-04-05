@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pop_qr/model/qr_item.dart';
 import 'package:pop_qr/provider/qr_items_provider.dart';
-import 'package:pop_qr/view/home_screen.dart';
+import 'package:pop_qr/view/qr_code_library.dart';
 
 class TestQrItems extends AsyncNotifier<List<QrItem>>
     implements QrItemsNotifier {
@@ -59,7 +59,9 @@ class TestQrItems extends AsyncNotifier<List<QrItem>>
 }
 
 void main() {
-  testWidgets('HomeScreenがQRアイテムをグリッド表示すること', (WidgetTester tester) async {
+  testWidgets('QRCodeLibraryScreenがQRアイテムをグリッド表示すること', (
+    WidgetTester tester,
+  ) async {
     // テスト用のアイテム
     final testItems = [
       QrItem(
@@ -84,7 +86,7 @@ void main() {
             () => TestQrItems(initialItems: testItems),
           ),
         ],
-        child: const CupertinoApp(home: HomeScreen()),
+        child: const CupertinoApp(home: QRCodeLibrary()),
       ),
     );
 
@@ -101,14 +103,16 @@ void main() {
     expect(find.text('🔍'), findsOneWidget);
   });
 
-  testWidgets('空のデータ状態でHomeScreenが適切に表示されること', (WidgetTester tester) async {
+  testWidgets('空のデータ状態でQRCodeLibraryScreenが適切に表示されること', (
+    WidgetTester tester,
+  ) async {
     // モックデータを使ってホーム画面をレンダリング
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           qrItemsProvider.overrideWith(() => TestQrItems(initialItems: [])),
         ],
-        child: const CupertinoApp(home: HomeScreen()),
+        child: const CupertinoApp(home: QRCodeLibrary()),
       ),
     );
 
@@ -139,7 +143,7 @@ void main() {
             () => TestQrItems(initialItems: testItems),
           ),
         ],
-        child: const CupertinoApp(home: HomeScreen()),
+        child: const CupertinoApp(home: QRCodeLibrary()),
       ),
     );
 

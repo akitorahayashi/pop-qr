@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:pop_qr/view/home_screen.dart';
+import 'package:pop_qr/view/qr_code_library.dart';
 
 class PopQRApp extends StatelessWidget {
   const PopQRApp({super.key});
@@ -13,7 +13,7 @@ class PopQRApp extends StatelessWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: CupertinoColors.systemBackground,
       ),
-      home: HomeScreen(),
+      home: QRCodeLibrary(),
       debugShowCheckedModeBanner: false,
     );
   }
