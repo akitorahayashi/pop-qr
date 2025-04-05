@@ -160,22 +160,45 @@ class QRItemCard extends HookConsumerWidget {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Center(
-                      child: Text(
-                        item.emoji,
-                        style: const TextStyle(fontSize: 32),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (
+                          Widget child,
+                          Animation<double> animation,
+                        ) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: Text(
+                          item.emoji,
+                          key: ValueKey<String>(item.emoji),
+                          style: const TextStyle(fontSize: 32),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
                   // タイトル
-                  Text(
-                    item.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 30),
+                    transitionBuilder: (
+                      Widget child,
+                      Animation<double> animation,
+                    ) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: Text(
+                      item.title,
+                      key: ValueKey<String>(item.title),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],

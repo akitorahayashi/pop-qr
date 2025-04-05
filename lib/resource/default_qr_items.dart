@@ -1,16 +1,13 @@
-import 'package:uuid/uuid.dart';
 import '../model/qr_item.dart';
 
 /// アプリの初期状態で表示されるサンプルQRコードデータ
 class DefaultQrItems {
-  static final _uuid = Uuid();
-
   /// デフォルトのQRコードアイテムのリストを取得
   static List<QrItem> getItems() {
     return [
       // X（旧Twitter）
       QrItem(
-        id: _uuid.v4(),
+        id: "x.id",
         title: 'X（旧Twitter）',
         url: 'https://x.com',
         emoji: '💬',
@@ -18,7 +15,7 @@ class DefaultQrItems {
 
       // Pop QR
       QrItem(
-        id: _uuid.v4(),
+        id: "popqr.id",
         title: 'Pop QR アプリ',
         url: 'https://apps.apple.com/jp/app/youtube/id544007664',
         emoji: '📲',

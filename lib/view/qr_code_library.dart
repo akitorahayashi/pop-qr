@@ -68,7 +68,11 @@ class QRCodeLibrary extends HookConsumerWidget {
                   itemCount: qrItems.length,
                   itemBuilder: (context, index) {
                     final item = qrItems[index];
-                    return QRItemCard(item: item, index: index);
+                    return QRItemCard(
+                      key: ValueKey<String>(item.id),
+                      item: item,
+                      index: index,
+                    );
                   },
                 );
               },
