@@ -11,9 +11,13 @@ class TestQrItemsNotifier extends AsyncNotifier<List<QrItem>>
   List<QrItem> items = [];
   bool removeItemCalled = false;
   bool updateEmojiCalled = false;
+  bool updateTitleCalled = false;
+  bool updateUrlCalled = false;
   String? lastRemovedId;
   String? lastUpdatedId;
   String? lastUpdatedEmoji;
+  String? lastUpdatedTitle;
+  String? lastUpdatedUrl;
 
   TestQrItemsNotifier(this.items);
 
@@ -51,6 +55,44 @@ class TestQrItemsNotifier extends AsyncNotifier<List<QrItem>>
         title: item.title,
         url: item.url,
         emoji: emoji,
+      );
+      state = AsyncData(List.from(items));
+    }
+  }
+
+  @override
+  Future<void> updateTitle(String id, String title) async {
+    updateTitleCalled = true;
+    lastUpdatedId = id;
+    lastUpdatedTitle = title;
+
+    final index = items.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final item = items[index];
+      items[index] = QrItem(
+        id: item.id,
+        title: title,
+        url: item.url,
+        emoji: item.emoji,
+      );
+      state = AsyncData(List.from(items));
+    }
+  }
+
+  @override
+  Future<void> updateUrl(String id, String url) async {
+    updateUrlCalled = true;
+    lastUpdatedId = id;
+    lastUpdatedUrl = url;
+
+    final index = items.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final item = items[index];
+      items[index] = QrItem(
+        id: item.id,
+        title: item.title,
+        url: url,
+        emoji: item.emoji,
       );
       state = AsyncData(List.from(items));
     }
@@ -164,6 +206,8 @@ void main() {
 
     // アクションシートが表示されているか確認
     expect(find.text('このQRコードに対して実行する操作を選んでください'), findsOneWidget);
+    expect(find.text('タイトルを変更'), findsOneWidget);
+    expect(find.text('URLを変更'), findsOneWidget);
     expect(find.text('絵文字を変更'), findsOneWidget);
     expect(find.text('削除'), findsOneWidget);
     expect(find.text('キャンセル'), findsOneWidget);
@@ -258,5 +302,313 @@ void main() {
     // カテゴリタブが表示されていることを確認（実際の表示に合わせて）
     expect(find.text('SNS'), findsOneWidget);
     expect(find.text('ビジネス'), findsOneWidget);
+  });
+
+  testWidgets('QRItemCardのタイトル編集ダイアログが表示されること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // モックプロバイダーの準備
+    final mockNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => mockNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // タイトル変更をタップ
+    await tester.tap(find.text('タイトルを変更'));
+    await tester.pumpAndSettle();
+
+    // タイトル編集ダイアログが表示されているか確認
+    expect(find.text('タイトルを変更'), findsOneWidget);
+    expect(find.byType(CupertinoTextField), findsOneWidget);
+
+    // TextEditingControllerの値を確認する代わりに、ダイアログ自体が表示されていることを確認
+    expect(find.byType(CupertinoAlertDialog), findsOneWidget);
+
+    // 保存ボタンとキャンセルボタンが表示されていることを確認
+    expect(find.text('保存'), findsOneWidget);
+    expect(find.text('キャンセル'), findsOneWidget);
+  });
+
+  testWidgets('QRItemCardのURL編集ダイアログが表示されること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // モックプロバイダーの準備
+    final mockNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => mockNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // URL変更をタップ
+    await tester.tap(find.text('URLを変更'));
+    await tester.pumpAndSettle();
+
+    // URL編集ダイアログが表示されているか確認
+    expect(find.text('URLを変更'), findsOneWidget);
+    expect(find.byType(CupertinoTextField), findsOneWidget);
+
+    // TextEditingControllerの値を確認する代わりに、ダイアログ自体が表示されていることを確認
+    expect(find.byType(CupertinoAlertDialog), findsOneWidget);
+
+    // 保存ボタンとキャンセルボタンが表示されていることを確認
+    expect(find.text('保存'), findsOneWidget);
+    expect(find.text('キャンセル'), findsOneWidget);
+  });
+
+  testWidgets('タイトル編集ダイアログでタイトルを更新できること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // テスト用のモックNotifier
+    final testNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => testNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // タイトル変更をタップ
+    await tester.tap(find.text('タイトルを変更'));
+    await tester.pumpAndSettle();
+
+    // 新しいタイトルを入力
+    await tester.enterText(find.byType(CupertinoTextField).first, '新しいタイトル');
+    await tester.pumpAndSettle();
+
+    // 保存をタップ
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, '保存'));
+    await tester.pumpAndSettle();
+
+    // タイトルが更新されたことを確認
+    expect(testNotifier.updateTitleCalled, isTrue);
+    expect(testNotifier.lastUpdatedId, equals('test-id'));
+    expect(testNotifier.lastUpdatedTitle, equals('新しいタイトル'));
+  });
+
+  testWidgets('URL編集ダイアログでURLを更新できること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // テスト用のモックNotifier
+    final testNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => testNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // URL変更をタップ
+    await tester.tap(find.text('URLを変更'));
+    await tester.pumpAndSettle();
+
+    // 新しいURLを入力（TextField自体を検索して入力）
+    await tester.enterText(
+      find.byType(CupertinoTextField).first,
+      'https://example.com/new',
+    );
+    await tester.pumpAndSettle();
+
+    // 保存をタップ
+    await tester.tap(find.widgetWithText(CupertinoDialogAction, '保存'));
+    await tester.pumpAndSettle();
+
+    // URLが更新されたことを確認
+    expect(testNotifier.updateUrlCalled, isTrue);
+    expect(testNotifier.lastUpdatedId, equals('test-id'));
+    expect(testNotifier.lastUpdatedUrl, equals('https://example.com/new'));
+  });
+
+  testWidgets('タイトル編集ダイアログでバリデーションエラーが表示されること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // テスト用のモックNotifier
+    final testNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => testNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // タイトル変更をタップ
+    await tester.tap(find.text('タイトルを変更'));
+    await tester.pumpAndSettle();
+
+    // 空のタイトルを入力（TextField自体を検索して入力）
+    await tester.enterText(find.byType(CupertinoTextField).first, '');
+    await tester.pumpAndSettle();
+
+    // バリデーションエラーが表示されることを確認
+    expect(find.text('タイトルを入力してください'), findsOneWidget);
+  });
+
+  testWidgets('URL編集ダイアログでバリデーションエラーが表示されること', (WidgetTester tester) async {
+    // テスト用のQrItemを作成
+    final testItem = QrItem(
+      id: 'test-id',
+      title: 'テストQRコード',
+      url: 'https://example.com',
+      emoji: '🧪',
+    );
+
+    // テスト用のモックNotifier
+    final testNotifier = TestQrItemsNotifier([testItem]);
+
+    // テスト用のProviderScopeでラップ
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [qrItemsProvider.overrideWith(() => testNotifier)],
+        child: CupertinoApp(
+          home: Center(
+            child: SizedBox(
+              width: 200,
+              height: 200,
+              child: QRItemCard(item: testItem),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // ウィジェットがレンダリングされるまで待機
+    await tester.pumpAndSettle();
+
+    // カードを長押し
+    await tester.longPress(find.byType(QRItemCard));
+    await tester.pumpAndSettle();
+
+    // URL変更をタップ
+    await tester.tap(find.text('URLを変更'));
+    await tester.pumpAndSettle();
+
+    // 無効なURLを入力（TextField自体を検索して入力）
+    await tester.enterText(
+      find.byType(CupertinoTextField).first,
+      'invalid-url',
+    );
+    await tester.pumpAndSettle();
+
+    // バリデーションエラーが表示されることを確認
+    expect(find.text('URLはhttp://またはhttps://で始まる必要があります'), findsOneWidget);
   });
 }

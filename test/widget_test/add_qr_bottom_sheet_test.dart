@@ -41,6 +41,12 @@ class TestQrItems extends AsyncNotifier<List<QrItem>>
 
   @override
   Future<void> updateEmoji(String id, String emoji) async {}
+
+  @override
+  Future<void> updateTitle(String id, String title) async {}
+
+  @override
+  Future<void> updateUrl(String id, String url) async {}
 }
 
 void main() {

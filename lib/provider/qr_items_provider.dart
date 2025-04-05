@@ -113,4 +113,68 @@ class QrItemsNotifier extends AsyncNotifier<List<QrItem>> {
       rethrow;
     }
   }
+
+  Future<void> updateTitle(String id, String title) async {
+    final storageService = ref.read(storageServiceProvider);
+
+    if (errorTestMode) {
+      throw Exception('エラーテストモードによる意図的なエラー：タイトル更新に失敗しました');
+    }
+
+    final currentItems = state.value ?? [];
+
+    final itemIndex = currentItems.indexWhere((item) => item.id == id);
+    if (itemIndex == -1) return;
+
+    final oldItem = currentItems[itemIndex];
+    final updatedItem = QrItem(
+      id: oldItem.id,
+      title: title,
+      url: oldItem.url,
+      emoji: oldItem.emoji,
+    );
+
+    final newItems = List<QrItem>.from(currentItems);
+    newItems[itemIndex] = updatedItem;
+    state = AsyncData(newItems);
+
+    try {
+      await storageService.updateQrItem(updatedItem);
+    } catch (e) {
+      state = await AsyncValue.guard(() => storageService.getQrItems());
+      rethrow;
+    }
+  }
+
+  Future<void> updateUrl(String id, String url) async {
+    final storageService = ref.read(storageServiceProvider);
+
+    if (errorTestMode) {
+      throw Exception('エラーテストモードによる意図的なエラー：URL更新に失敗しました');
+    }
+
+    final currentItems = state.value ?? [];
+
+    final itemIndex = currentItems.indexWhere((item) => item.id == id);
+    if (itemIndex == -1) return;
+
+    final oldItem = currentItems[itemIndex];
+    final updatedItem = QrItem(
+      id: oldItem.id,
+      title: oldItem.title,
+      url: url,
+      emoji: oldItem.emoji,
+    );
+
+    final newItems = List<QrItem>.from(currentItems);
+    newItems[itemIndex] = updatedItem;
+    state = AsyncData(newItems);
+
+    try {
+      await storageService.updateQrItem(updatedItem);
+    } catch (e) {
+      state = await AsyncValue.guard(() => storageService.getQrItems());
+      rethrow;
+    }
+  }
 }

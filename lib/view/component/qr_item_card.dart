@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../model/qr_item.dart';
 import '../../provider/qr_items_provider.dart';
 import '../../resource/emoji_list.dart';
+import '../../util/pq_validation.dart';
 import 'qr_detail_modal.dart';
 
 class QRItemCard extends HookConsumerWidget {
@@ -229,6 +230,20 @@ class QRItemCard extends HookConsumerWidget {
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
+                  _showTitleEditDialog(context, ref);
+                },
+                child: const Text('タイトルを変更'),
+              ),
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showUrlEditDialog(context, ref);
+                },
+                child: const Text('URLを変更'),
+              ),
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
                   _showEmojiSelectSheet(context, ref);
                 },
                 child: const Text('絵文字を変更'),
@@ -254,6 +269,150 @@ class QRItemCard extends HookConsumerWidget {
               child: const Text('キャンセル'),
             ),
           ),
+    );
+  }
+
+  void _showTitleEditDialog(BuildContext context, WidgetRef ref) {
+    final textController = TextEditingController(text: item.title);
+    String? validationError;
+
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: const Text('タイトルを変更'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  CupertinoTextField(
+                    controller: textController,
+                    placeholder: 'タイトルを入力',
+                    padding: const EdgeInsets.all(8),
+                    autofocus: true,
+                    onChanged: (value) {
+                      // バリデーションを行い、エラーメッセージを更新
+                      setState(() {
+                        validationError = PQValidation.validateTitle(value);
+                      });
+                    },
+                  ),
+                  if (validationError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        validationError!,
+                        style: const TextStyle(
+                          color: CupertinoColors.systemRed,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              actions: <CupertinoDialogAction>[
+                CupertinoDialogAction(
+                  isDestructiveAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('キャンセル'),
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed:
+                      validationError == null
+                          ? () {
+                            final newTitle = textController.text;
+                            if (newTitle != item.title) {
+                              ref
+                                  .read(qrItemsProvider.notifier)
+                                  .updateTitle(item.id, newTitle);
+                            }
+                            Navigator.pop(context);
+                          }
+                          : null,
+                  child: const Text('保存'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showUrlEditDialog(BuildContext context, WidgetRef ref) {
+    final textController = TextEditingController(text: item.url);
+    String? validationError;
+
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: const Text('URLを変更'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  CupertinoTextField(
+                    controller: textController,
+                    placeholder: 'URLを入力',
+                    padding: const EdgeInsets.all(8),
+                    autofocus: true,
+                    onChanged: (value) {
+                      // バリデーションを行い、エラーメッセージを更新
+                      setState(() {
+                        validationError = PQValidation.validateUrl(value);
+                      });
+                    },
+                  ),
+                  if (validationError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        validationError!,
+                        style: const TextStyle(
+                          color: CupertinoColors.systemRed,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              actions: <CupertinoDialogAction>[
+                CupertinoDialogAction(
+                  isDestructiveAction: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('キャンセル'),
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed:
+                      validationError == null
+                          ? () {
+                            final newUrl = textController.text;
+                            if (newUrl != item.url) {
+                              ref
+                                  .read(qrItemsProvider.notifier)
+                                  .updateUrl(item.id, newUrl);
+                            }
+                            Navigator.pop(context);
+                          }
+                          : null,
+                  child: const Text('保存'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

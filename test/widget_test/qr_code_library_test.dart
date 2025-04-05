@@ -56,6 +56,48 @@ class TestQrItems extends AsyncNotifier<List<QrItem>>
       state = AsyncData(newItems);
     }
   }
+
+  @override
+  Future<void> updateTitle(String id, String title) async {
+    if (state.value == null) return;
+
+    final currentItems = state.value!;
+    final index = currentItems.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final oldItem = currentItems[index];
+      final updatedItem = QrItem(
+        id: oldItem.id,
+        title: title,
+        url: oldItem.url,
+        emoji: oldItem.emoji,
+      );
+
+      final newItems = List<QrItem>.from(currentItems);
+      newItems[index] = updatedItem;
+      state = AsyncData(newItems);
+    }
+  }
+
+  @override
+  Future<void> updateUrl(String id, String url) async {
+    if (state.value == null) return;
+
+    final currentItems = state.value!;
+    final index = currentItems.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final oldItem = currentItems[index];
+      final updatedItem = QrItem(
+        id: oldItem.id,
+        title: oldItem.title,
+        url: url,
+        emoji: oldItem.emoji,
+      );
+
+      final newItems = List<QrItem>.from(currentItems);
+      newItems[index] = updatedItem;
+      state = AsyncData(newItems);
+    }
+  }
 }
 
 void main() {
