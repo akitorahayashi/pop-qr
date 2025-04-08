@@ -4,16 +4,15 @@ import 'package:flutter/services.dart' show rootBundle;
 enum EmojiCategory {
   all('all', 'すべて'),
   social('social', 'SNS'),
+  media('media', 'メディア'),
+  technology('technology', 'テクノロジー'),
+  services('services', 'サービス'),
   business('business', 'ビジネス'),
   personal('personal', '個人'),
-  services('services', 'サービス'),
-  media('media', 'メディア'),
-  technology('tech', 'テクノロジー'),
-  animals('animals', '動物'),
+  food('food', '食べ物・飲み物'),
   places('places', '場所'),
   transport('transport', '乗り物'),
-  food('food', '食べ物・飲み物'),
-  emotions('emotions', '感情・表情'),
+  animals('animals', '動物'),
   sports('sports', 'スポーツ'),
   others('others', 'その他');
 
@@ -29,14 +28,17 @@ enum EmojiCategory {
 
   static List<EmojiCategory> get displayCategories => [
     social,
-    business,
-    personal,
-    services,
     media,
     technology,
-    sports,
-    animals,
+    services,
+    business,
+    personal,
     food,
+    places,
+    transport,
+    animals,
+    sports,
+    others,
   ];
 
   static List<EmojiCategory> get allCategories =>
@@ -68,13 +70,14 @@ enum EmojiCategory {
         '場所': 'places',
         '乗り物': 'transport',
         '食べ物・飲み物': 'food',
-        '感情・表情': 'emotions',
         'スポーツ': 'sports',
         'その他': 'others',
       };
 
       _emojiMap.clear();
-      for (final c in allCategories) _emojiMap[c.id] = [];
+      for (final c in allCategories) {
+        _emojiMap[c.id] = [];
+      }
 
       var lines = content.split('\n');
       var currentCategory = '';

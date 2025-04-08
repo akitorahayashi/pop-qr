@@ -68,3 +68,4 @@ flutter:
     - assets/app_icon/app_icon_balloon_qr.png
     - assets/app_icon/app_icon_focus_link.png
     - assets/app_icon/app_icon_focus_qr.png
+    - lib/resource/emoji_list.txt
