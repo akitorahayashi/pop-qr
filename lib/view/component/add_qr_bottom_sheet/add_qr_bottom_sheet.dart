@@ -32,10 +32,10 @@ class AddQrBottomSheet extends HookConsumerWidget {
     final selectedEmoji = useState<String>('📱');
 
     // カテゴリ選択
-    final currentCategory = useState<String>(EmojiList.kSocial);
+    final currentCategory = useState<EmojiCategory>(EmojiCategory.social);
 
     // カテゴリ選択処理
-    void selectCategory(String category) {
+    void selectCategory(EmojiCategory category) {
       currentCategory.value = category;
       HapticFeedback.lightImpact();
     }
@@ -290,7 +290,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                   child: ListView(
                                     scrollDirection: Axis.horizontal,
                                     children:
-                                        EmojiList.displayCategories.map((
+                                        EmojiCategory.displayCategories.map((
                                           category,
                                         ) {
                                           final isSelected =
@@ -327,8 +327,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                               ),
                                               child: Center(
                                                 child: Text(
-                                                  EmojiList
-                                                      .categoryNames[category]!,
+                                                  category.label,
                                                   style: TextStyle(
                                                     color:
                                                         isSelected
@@ -366,9 +365,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                         spacing: 8,
                                         runSpacing: 8,
                                         children:
-                                            EmojiList
-                                                .categoryEmojis[currentCategory
-                                                    .value]!
+                                            currentCategory.value.emojis
                                                 .map(
                                                   (emoji) => GestureDetector(
                                                     onTap: () {

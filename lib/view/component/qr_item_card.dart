@@ -497,7 +497,7 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
     final selectedEmoji = useState<String>(initialEmoji);
 
     // 現在表示中のカテゴリー
-    final currentCategory = useState<String>(EmojiList.kSocial);
+    final currentCategory = useState<EmojiCategory>(EmojiCategory.social);
 
     // 絵文字を選択して閉じる
     void selectAndClose(String emoji) {
@@ -506,7 +506,7 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
     }
 
     // カテゴリーを選択
-    void selectCategory(String category) {
+    void selectCategory(EmojiCategory category) {
       currentCategory.value = category;
       HapticFeedback.lightImpact();
     }
@@ -621,7 +621,7 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               children:
-                  EmojiList.displayCategories.map((category) {
+                  EmojiCategory.displayCategories.map((category) {
                     final isSelected = currentCategory.value == category;
                     return GestureDetector(
                       onTap: () => selectCategory(category),
@@ -637,7 +637,7 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
                         ),
                         child: Center(
                           child: Text(
-                            EmojiList.categoryNames[category]!,
+                            category.label,
                             style: TextStyle(
                               color:
                                   isSelected
@@ -665,11 +665,9 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount:
-                  EmojiList.categoryEmojis[currentCategory.value]!.length,
+              itemCount: currentCategory.value.emojis.length,
               itemBuilder: (context, index) {
-                final emoji =
-                    EmojiList.categoryEmojis[currentCategory.value]![index];
+                final emoji = currentCategory.value.emojis[index];
                 final isSelected = selectedEmoji.value == emoji;
 
                 return GestureDetector(
