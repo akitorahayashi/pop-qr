@@ -300,8 +300,8 @@ void main() {
     expect(find.text('絵文字を選択'), findsOneWidget);
 
     // カテゴリタブが表示されていることを確認（実際の表示に合わせて）
-    expect(find.text('SNS'), findsOneWidget);
-    expect(find.text('ビジネス'), findsOneWidget);
+    expect(find.text('テクノロジー'), findsOneWidget);
+    expect(find.text('サービス'), findsOneWidget);
   });
 
   testWidgets('QRItemCardのタイトル編集ダイアログが表示されること', (WidgetTester tester) async {
