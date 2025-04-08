@@ -58,15 +58,8 @@ class _QrDetailModalContent extends HookConsumerWidget {
       isOpening.value = true;
 
       try {
-        // URLを開く
-        await launchUrl(
-          url,
-          mode: LaunchMode.inAppWebView,
-          webViewConfiguration: const WebViewConfiguration(
-            enableJavaScript: true,
-            enableDomStorage: true,
-          ),
-        );
+        // URLを外部ブラウザで開く
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } catch (e) {
         // エラー処理 - オーバーレイでメッセージを表示
         if (context.mounted) {
