@@ -253,6 +253,13 @@ class QRItemCard extends HookConsumerWidget {
               CupertinoActionSheetAction(
                 onPressed: () {
                   Navigator.pop(context);
+                  _showEmojiSelectSheet(context, ref);
+                },
+                child: const Text('絵文字を変更'),
+              ),
+              CupertinoActionSheetAction(
+                onPressed: () {
+                  Navigator.pop(context);
                   _showTitleEditDialog(context, ref);
                 },
                 child: const Text('タイトルを変更'),
@@ -263,13 +270,6 @@ class QRItemCard extends HookConsumerWidget {
                   _showUrlEditDialog(context, ref);
                 },
                 child: const Text('URLを変更'),
-              ),
-              CupertinoActionSheetAction(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showEmojiSelectSheet(context, ref);
-                },
-                child: const Text('絵文字を変更'),
               ),
               CupertinoActionSheetAction(
                 isDestructiveAction: true,
