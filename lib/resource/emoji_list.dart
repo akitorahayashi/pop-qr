@@ -2,19 +2,15 @@ import 'package:flutter/services.dart' show rootBundle;
 
 /// 絵文字カテゴリー
 enum EmojiCategory {
-  all('all', 'すべて'),
-  social('social', 'SNS'),
-  media('media', 'メディア'),
   technology('technology', 'テクノロジー'),
+  hobby('hobby', '趣味'),
   services('services', 'サービス'),
-  business('business', 'ビジネス'),
   personal('personal', '個人'),
   food('food', '食べ物・飲み物'),
   places('places', '場所'),
   transport('transport', '乗り物'),
   animals('animals', '動物'),
-  sports('sports', 'スポーツ'),
-  others('others', 'その他');
+  weather('weather', '天気');
 
   final String id;
   final String label;
@@ -24,27 +20,29 @@ enum EmojiCategory {
   List<String> get emojis => _emojiMap[id] ?? [];
 
   static EmojiCategory fromId(String id) =>
-      values.firstWhere((c) => c.id == id, orElse: () => all);
+      values.firstWhere((c) => c.id == id, orElse: () => technology);
 
   static List<EmojiCategory> get displayCategories => [
-    social,
-    media,
     technology,
+    hobby,
     services,
-    business,
     personal,
     food,
     places,
     transport,
     animals,
-    sports,
-    others,
+    weather,
   ];
 
-  static List<EmojiCategory> get allCategories =>
-      values.where((c) => c != all).toList();
+  static List<EmojiCategory> get allCategories => values.toList();
 
-  static List<String> get allEmojis => all.emojis;
+  static List<String> get allEmojis {
+    final List<String> result = [];
+    for (final category in values) {
+      result.addAll(category.emojis);
+    }
+    return result;
+  }
 
   static Map<String, String> get categoryNames => {
     for (final c in values) c.id: c.label,
@@ -60,18 +58,19 @@ enum EmojiCategory {
         'lib/resource/emoji_list.txt',
       );
       final categoryMapping = {
-        'SNS': 'social',
-        'ビジネス': 'business',
+        'SNS': 'technology',
+        'ビジネス': 'services',
         '個人': 'personal',
         'サービス': 'services',
-        'メディア': 'media',
+        'メディア': 'hobby',
+        '趣味': 'hobby',
+        'スポーツ': 'hobby',
         'テクノロジー': 'technology',
         '動物': 'animals',
         '場所': 'places',
         '乗り物': 'transport',
         '食べ物・飲み物': 'food',
-        'スポーツ': 'sports',
-        'その他': 'others',
+        '天気': 'weather',
       };
 
       _emojiMap.clear();
@@ -108,12 +107,6 @@ enum EmojiCategory {
           _emojiMap[currentCategory]?.addAll(emojis);
         }
       }
-
-      List<String> allList = <String>[];
-      for (var list in _emojiMap.values) {
-        allList.addAll(list);
-      }
-      _emojiMap['all'] = allList;
     } catch (e) {
       print('絵文字読み込みエラー: $e');
     }

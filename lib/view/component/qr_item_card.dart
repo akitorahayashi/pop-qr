@@ -497,7 +497,7 @@ class _EmojiSelectBottomSheet extends HookConsumerWidget {
     final selectedEmoji = useState<String>(initialEmoji);
 
     // 現在表示中のカテゴリー
-    final currentCategory = useState<EmojiCategory>(EmojiCategory.social);
+    final currentCategory = useState<EmojiCategory>(EmojiCategory.technology);
 
     // 絵文字を選択して閉じる
     void selectAndClose(String emoji) {

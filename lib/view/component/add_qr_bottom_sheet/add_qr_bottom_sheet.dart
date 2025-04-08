@@ -32,7 +32,7 @@ class AddQrBottomSheet extends HookConsumerWidget {
     final selectedEmoji = useState<String>('📱');
 
     // カテゴリ選択
-    final currentCategory = useState<EmojiCategory>(EmojiCategory.social);
+    final currentCategory = useState<EmojiCategory>(EmojiCategory.technology);
 
     // カテゴリ選択処理
     void selectCategory(EmojiCategory category) {
