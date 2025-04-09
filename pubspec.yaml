@@ -1,5 +1,5 @@
 name: pop_qr
-description: "A new Flutter project."
+description: "Pop QR lets users store links, and present them as QR codes for face-to-face sharing."
 
 publish_to: 'none'
 

@@ -1,8 +1,6 @@
-# Pop QR - QRコードを介したリンク共有アプリ
+# Pop QR
 
-## プロジェクト概要
-
-Pop QRは、URLリンクをQRコードとして保存して、対面で共有する時ためのアプリです。
+Pop QRは、URLリンクをQRコードとして保存して、対面で共有するためのアプリです。
 QRコードはカード形式で表示され、タップするとQRコードを表示します。
 
 ## アーキテクチャ
@@ -114,8 +112,8 @@ GridView.builder(
 )
 ```
 
-### QRコード詳細のモーダル表示とURL開く機能
-QRコードカードをタップすると、モーダルでQRコードを表示します。URLをタップするとアプリ内ブラウザでそのURLを開きます。
+### QRコードの詳細のモーダル表示とURL開く機能
+QRコードカードをタップすると、モーダルでQRコードを表示します。URLをタップするとブラウザや App Store などでそのURLを開きます。
 
 ```dart
 showGeneralDialog(
@@ -129,7 +127,7 @@ showGeneralDialog(
 // URLを開く処理
 await launchUrl(
   url,
-  mode: LaunchMode.inAppWebView,
+  mode: LaunchMode.externalApplication,
   webViewConfiguration: const WebViewConfiguration(
     enableJavaScript: true,
     enableDomStorage: true,
@@ -165,18 +163,3 @@ QRコードの追加時には、入力値のバリデーションを行います
 - URLは http:// または https:// で始まる有効なURL形式
 
 バリデーション条件はフォーム下部にグレーテキストで常に表示されます。
-
-## テスト
-
-### ユニットテスト
-StorageServiceとQrItemsProviderのテストを実装しています。
-
-### ウィジェットテスト
-主要なUIコンポーネントの機能テストを実装しています。テストは実際のデバイスを使用しないFlutterのウィジェットテスト環境で実行されます。
-
-## CI/CD ( flutter-ci.yml )
-
-- フォーマットチェック
-- 静的解析
-- テスト実行
-- Android/iOSビルド
