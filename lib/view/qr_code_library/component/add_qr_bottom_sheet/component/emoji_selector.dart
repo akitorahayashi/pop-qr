@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
 
-import '../../resource/emoji_list.dart';
+import '../../../../../resource/emoji_list.dart';
 
 /// 絵文字セレクターコンポーネント
 /// ボトムシートではなくインラインで使用可能

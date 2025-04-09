@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pop_qr/model/qr_item.dart';
 import 'package:pop_qr/provider/qr_items_provider.dart';
-import 'package:pop_qr/view/qr_code_library.dart';
+import 'package:pop_qr/view/qr_code_library/qr_code_library.dart';
 
 class TestQrItems extends AsyncNotifier<List<QrItem>>
     implements QrItemsNotifier {

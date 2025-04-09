@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-
-import '../../model/qr_item.dart';
-import '../../provider/qr_items_provider.dart';
-import '../../util/pq_validation.dart';
-import 'dialog/editable_field_dialog.dart';
-import 'emoji_selector.dart';
-import 'qr_detail_modal.dart';
+import 'package:pop_qr/model/qr_item.dart';
+import 'package:pop_qr/provider/qr_items_provider.dart';
+import 'package:pop_qr/util/pq_validation.dart';
+import 'package:pop_qr/view/dialog/editable_field_dialog.dart';
+import 'package:pop_qr/view/pop_up_qr.dart';
+import 'package:pop_qr/view/qr_code_library/component/add_qr_bottom_sheet/component/emoji_selector.dart';
 
 class AnimatedCard extends HookWidget {
   final Widget child;
@@ -198,7 +197,7 @@ class QRItemCard extends HookConsumerWidget {
       child: PressableCard(
         onTap: () {
           if (context.mounted) {
-            showQrDetailModal(context: context, qrItem: item);
+            popUpQR(context: context, qrItem: item);
           }
         },
         onLongPress: () {

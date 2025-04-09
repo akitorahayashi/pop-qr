@@ -1,11 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pop_qr/view/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
-import 'package:pop_qr/view/component/floating_action_button.dart';
-import 'package:pop_qr/view/component/qr_item_card.dart';
+import 'package:pop_qr/view/qr_code_library/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
+import 'package:pop_qr/view/qr_code_library/component/floating_action_button.dart';
+import 'package:pop_qr/view/qr_code_library/component/qr_item_card.dart';
 import 'package:pop_qr/view/sub_view/error_view.dart';
 
-import '../provider/qr_items_provider.dart';
+import '../../provider/qr_items_provider.dart';
 
 class QRCodeLibrary extends HookConsumerWidget {
   const QRCodeLibrary({super.key});

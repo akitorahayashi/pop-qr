@@ -5,15 +5,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../model/qr_item.dart';
+import '../model/qr_item.dart';
 
 /// QRコード詳細表示用モーダル
 ///
 /// 背景がマスクされ、QRコードがふわっと浮かび上がるアニメーション付き
-void showQrDetailModal({
-  required BuildContext context,
-  required QrItem qrItem,
-}) {
+void popUpQR({required BuildContext context, required QrItem qrItem}) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
@@ -32,7 +29,7 @@ void showQrDetailModal({
         opacity: curvedAnimation,
         child: ScaleTransition(
           scale: Tween<double>(begin: 0.85, end: 1.0).animate(curvedAnimation),
-          child: _QrDetailModalContent(qrItem: qrItem),
+          child: _QrDetailContent(qrItem: qrItem),
         ),
       );
     },
@@ -40,10 +37,10 @@ void showQrDetailModal({
 }
 
 /// QRコード詳細モーダルの内容
-class _QrDetailModalContent extends HookConsumerWidget {
+class _QrDetailContent extends HookConsumerWidget {
   final QrItem qrItem;
 
-  const _QrDetailModalContent({required this.qrItem});
+  const _QrDetailContent({required this.qrItem});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

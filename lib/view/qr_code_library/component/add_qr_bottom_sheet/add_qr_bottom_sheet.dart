@@ -2,10 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/services.dart';
+import 'package:pop_qr/provider/qr_items_provider.dart';
+import 'package:pop_qr/resource/emoji_list.dart';
+import 'package:pop_qr/util/pq_validation.dart';
 
-import '../../../provider/qr_items_provider.dart';
-import '../../../resource/emoji_list.dart';
-import '../../../util/pq_validation.dart';
 import 'component/add_qr_button.dart';
 import 'component/pq_input_field.dart';
 

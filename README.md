@@ -36,19 +36,29 @@ pop_qr/
 │   │   └── storage_service.dart
 │   │
 │   ├── view/                       
-│   │   ├── qr_code_library.dart
-│   │   │
-│   │   ├── component/              
-│   │   │   ├── qr_item_card.dart
-│   │   │   ├── qr_detail_modal.dart
-│   │   │   ├── qr_icon_selector.dart
+│   │   ├── qr_code_library/
+│   │   │   ├── qr_code_library.dart
 │   │   │   │
-│   │   │   └── add_qr_bottom_sheet/  
-│   │   │       ├── add_qr_bottom_sheet.dart
-│   │   │       └── component/          
-│   │   │           ├── add_qr_button.dart
-│   │   │           ├── pq_input_field.dart
-│   │   │           └── qr_icon_data.dart
+│   │   │   ├── component/              
+│   │   │   │   ├── qr_item_card.dart
+│   │   │   │   ├── floating_action_button.dart
+│   │   │   │   │
+│   │   │   │   └── add_qr_bottom_sheet/  
+│   │   │   │       ├── add_qr_bottom_sheet.dart
+│   │   │   │       └── component/          
+│   │   │   │           ├── add_qr_button.dart
+│   │   │   │           ├── pq_input_field.dart
+│   │   │   │           ├── emoji_selector.dart
+│   │   │   │           ├── pq_validation_condition.dart
+│   │   │   │           └── qr_icon_data.dart
+│   │   │   │
+│   │   │   └── dialog/
+│   │   │       └── editable_field_dialog.dart
+│   │   │
+│   │   ├── pop_up_qr.dart
+│   │   │
+│   │   ├── dialog/               
+│   │   │   └── editable_field_dialog.dart
 │   │   │
 │   │   └── sub_view/               
 │   │       └── error_view.dart
