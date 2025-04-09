@@ -9,6 +9,7 @@ import '../../../util/pq_validation.dart';
 import 'component/add_qr_button.dart';
 import 'component/pq_input_field.dart';
 
+/// QRコード追加のためのボトムシート
 class AddQrBottomSheet extends HookConsumerWidget {
   const AddQrBottomSheet({super.key});
 
@@ -439,8 +440,8 @@ class AddQrBottomSheet extends HookConsumerWidget {
                                     },
                                   ),
                                 ),
-                                // ボタンの上に余白を追加
-                                const SizedBox(height: 24),
+                                // スクロール領域の下部に余白を追加（ボタンの高さ分）
+                                const SizedBox(height: 80),
                               ],
                             ),
                           ],
@@ -448,10 +449,22 @@ class AddQrBottomSheet extends HookConsumerWidget {
                       ),
                     ),
 
-                    // 追加ボタン
-                    AddQRButton(
-                      onPressed: submitForm,
-                      isEnabled: isFormValid.value,
+                    // 追加ボタン - 画面下部に固定
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.systemBackground,
+                        border: Border(
+                          top: BorderSide(
+                            color: CupertinoColors.systemGrey5,
+                            width: 0.5,
+                          ),
+                        ),
+                      ),
+                      child: AddQRButton(
+                        onPressed: submitForm,
+                        isEnabled: isFormValid.value,
+                      ),
                     ),
                   ],
                 ),

@@ -47,32 +47,6 @@ class _QrDetailModalContent extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // URL開く処理の状態管理
-    final isOpening = useState(false);
-
-    // URLを開く関数
-    Future<void> launchUrlInApp() async {
-      final url = Uri.parse(qrItem.url);
-
-      // URL開始中に設定
-      isOpening.value = true;
-
-      try {
-        // URLを外部ブラウザで開く
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } catch (e) {
-        // エラー処理 - オーバーレイでメッセージを表示
-        if (context.mounted) {
-          _showMessage(context, 'URLを開けませんでした');
-        }
-      } finally {
-        // 処理完了したら状態リセット
-        if (context.mounted) {
-          isOpening.value = false;
-        }
-      }
-    }
-
     return GestureDetector(
       // 背景タップでモーダルを閉じる
       onTap: () => Navigator.of(context).pop(),
@@ -98,106 +72,153 @@ class _QrDetailModalContent extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ヘッダー部分
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(qrItem.emoji, style: const TextStyle(fontSize: 24)),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        qrItem.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+                _QrDetailHeader(qrItem: qrItem),
 
                 const SizedBox(height: 20),
 
                 // QRコード部分
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: CupertinoColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CupertinoColors.systemGrey4.withValues(
-                          alpha: 0.3,
-                        ),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: QrImageView(
-                    data: qrItem.url,
-                    version: QrVersions.auto,
-                    size: 230.0,
-                  ),
-                ),
+                _QrCodeDisplay(url: qrItem.url),
 
                 const SizedBox(height: 20),
 
                 // URL表示部分
-                GestureDetector(
-                  onTap: () {
-                    if (!isOpening.value) {
-                      // ハプティックフィードバック
-                      HapticFeedback.lightImpact();
-                      launchUrlInApp();
-                    }
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // リンクアイコン
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, animation) {
-                          return ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          );
-                        },
-                        child:
-                            isOpening.value
-                                ? const CupertinoActivityIndicator(
-                                  key: ValueKey('loading'),
-                                  radius: 8,
-                                )
-                                : const Icon(
-                                  CupertinoIcons.link,
-                                  key: ValueKey('link'),
-                                  size: 18,
-                                  color: CupertinoColors.systemGrey,
-                                ),
-                      ),
-                      const SizedBox(width: 8),
-                      // URL
-                      Flexible(
-                        child: Text(
-                          qrItem.url,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: CupertinoColors.systemGrey,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _QrUrlLink(url: qrItem.url),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// ヘッダー部分 - 絵文字とタイトルを表示
+class _QrDetailHeader extends StatelessWidget {
+  final QrItem qrItem;
+
+  const _QrDetailHeader({required this.qrItem});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(qrItem.emoji, style: const TextStyle(fontSize: 24)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            qrItem.title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// QRコード表示部分
+class _QrCodeDisplay extends StatelessWidget {
+  final String url;
+
+  const _QrCodeDisplay({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.systemGrey4.withValues(alpha: 0.3),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: QrImageView(data: url, version: QrVersions.auto, size: 230.0),
+    );
+  }
+}
+
+/// URL表示・リンク部分
+class _QrUrlLink extends HookConsumerWidget {
+  final String url;
+
+  const _QrUrlLink({required this.url});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // URL開く処理の状態管理
+    final isOpening = useState(false);
+
+    // URLを開く関数
+    Future<void> launchUrlInApp() async {
+      final uri = Uri.parse(url);
+
+      // URL開始中に設定
+      isOpening.value = true;
+
+      try {
+        // URLを外部ブラウザで開く
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        // エラー処理 - オーバーレイでメッセージを表示
+        if (context.mounted) {
+          _showMessage(context, 'URLを開けませんでした');
+        }
+      } finally {
+        // 処理完了したら状態リセット
+        if (context.mounted) {
+          isOpening.value = false;
+        }
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (!isOpening.value) {
+          // ハプティックフィードバック
+          HapticFeedback.lightImpact();
+          launchUrlInApp();
+        }
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // リンクアイコン
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child:
+                isOpening.value
+                    ? const CupertinoActivityIndicator(
+                      key: ValueKey('loading'),
+                      radius: 8,
+                    )
+                    : const Icon(
+                      CupertinoIcons.link,
+                      key: ValueKey('link'),
+                      size: 18,
+                      color: CupertinoColors.systemGrey,
+                    ),
+          ),
+          const SizedBox(width: 8),
+          // URL
+          Flexible(
+            child: Text(
+              url,
+              style: TextStyle(fontSize: 14, color: CupertinoColors.systemGrey),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter/services.dart';
 import 'package:pop_qr/view/component/add_qr_bottom_sheet/add_qr_bottom_sheet.dart';
+import 'package:pop_qr/view/component/floating_action_button.dart';
+import 'package:pop_qr/view/component/qr_item_card.dart';
+import 'package:pop_qr/view/sub_view/error_view.dart';
 
 import '../provider/qr_items_provider.dart';
-import 'sub_view/error_view.dart';
-import 'component/qr_item_card.dart';
 
 class QRCodeLibrary extends HookConsumerWidget {
   const QRCodeLibrary({super.key});
@@ -97,71 +96,9 @@ class QRCodeLibrary extends HookConsumerWidget {
             Positioned(
               right: 16,
               bottom: 16,
-              child: HookBuilder(
-                builder: (context) {
-                  // タップ状態を追跡
-                  final isPressed = useState(false);
-
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-
-                      // タップエフェクト（押し込み→元に戻す）
-                      isPressed.value = true;
-                      Future.delayed(const Duration(milliseconds: 100), () {
-                        isPressed.value = false;
-                        if (context.mounted) {
-                          _showAddQrBottomSheet(context, ref);
-                        }
-                      });
-                    },
-                    onTapDown: (_) {
-                      isPressed.value = true;
-                      HapticFeedback.lightImpact();
-                    },
-                    onTapUp: (_) {
-                      isPressed.value = false;
-                    },
-                    onTapCancel: () {
-                      isPressed.value = false;
-                    },
-                    child: AnimatedScale(
-                      scale: isPressed.value ? 0.9 : 1.0,
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeInOut,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 100),
-                        opacity: isPressed.value ? 0.8 : 1.0,
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: CupertinoColors.systemBackground,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: CupertinoColors.systemGrey.withValues(
-                                  alpha: 0.3,
-                                ),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: CupertinoColors.systemGrey5,
-                              width: 1.0,
-                            ),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.add,
-                            color: CupertinoColors.activeBlue,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+              child: FloatingActionButton(
+                onTap: () => _showAddQrBottomSheet(context, ref),
+                icon: CupertinoIcons.add,
               ),
             ),
           ],
