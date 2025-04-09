@@ -26,8 +26,7 @@ pop_qr/
 │   ├── main.dart
 │   │
 │   ├── model/                      
-│   │   ├── qr_item.dart
-│   │   └── generate/
+│   │   └── qr_item.dart
 │   │
 │   ├── provider/                   
 │   │   └── qr_items_provider.dart
@@ -36,26 +35,24 @@ pop_qr/
 │   │   └── storage_service.dart
 │   │
 │   ├── view/                       
+│   │   ├── pop_up_qr.dart
+│   │   │
 │   │   ├── qr_code_library/
 │   │   │   ├── qr_code_library.dart
 │   │   │   │
-│   │   │   ├── component/              
-│   │   │   │   ├── qr_item_card.dart
-│   │   │   │   ├── floating_action_button.dart
-│   │   │   │   │
-│   │   │   │   └── add_qr_bottom_sheet/  
-│   │   │   │       ├── add_qr_bottom_sheet.dart
-│   │   │   │       └── component/          
-│   │   │   │           ├── add_qr_button.dart
-│   │   │   │           ├── pq_input_field.dart
-│   │   │   │           ├── emoji_selector.dart
-│   │   │   │           ├── pq_validation_condition.dart
-│   │   │   │           └── qr_icon_data.dart
-│   │   │   │
-│   │   │   └── dialog/
-│   │   │       └── editable_field_dialog.dart
-│   │   │
-│   │   ├── pop_up_qr.dart
+│   │   │   └── component/              
+│   │   │       ├── qr_item_card.dart
+│   │   │       ├── floating_action_button.dart
+│   │   │       │
+│   │   │       └── add_qr_bottom_sheet/  
+│   │   │           ├── add_qr_bottom_sheet.dart
+│   │   │           │
+│   │   │           └── component/          
+│   │   │               ├── add_qr_button.dart
+│   │   │               ├── pq_input_field.dart
+│   │   │               ├── emoji_selector.dart
+│   │   │               ├── pq_validation_condition.dart
+│   │   │               └── qr_icon_data.dart
 │   │   │
 │   │   ├── dialog/               
 │   │   │   └── editable_field_dialog.dart
@@ -73,10 +70,6 @@ pop_qr/
 ├── test/                          
 │   ├── unit_test/
 │   └── widget_test/
-│       ├── widget_test.dart
-│       ├── qr_code_library_test.dart
-│       ├── qr_item_card_test.dart
-│       └── add_qr_bottom_sheet_test.dart
 │
 └── pubspec.yaml
 ```
@@ -138,10 +131,6 @@ showGeneralDialog(
 await launchUrl(
   url,
   mode: LaunchMode.externalApplication,
-  webViewConfiguration: const WebViewConfiguration(
-    enableJavaScript: true,
-    enableDomStorage: true,
-  ),
 );
 ```
 
