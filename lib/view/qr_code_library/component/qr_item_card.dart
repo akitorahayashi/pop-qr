@@ -198,7 +198,7 @@ class QRItemCard extends HookConsumerWidget {
         if (isProcessingTap.value) return; // 処理中なら重複実行を防止
 
         isProcessingTap.value = true;
-        HapticFeedback.selectionClick(); // Changed from lightImpact
+        HapticFeedback.mediumImpact(); // Change from selectionClick to mediumImpact
 
         // 縮小→待機→元に戻る→モーダル表示
         isPressed.value = true;
