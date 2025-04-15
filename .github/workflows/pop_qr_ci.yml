@@ -151,7 +151,6 @@ jobs:
 
   unit-tests:
     name: Run Unit Tests
-    needs: format-and-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -185,7 +184,6 @@ jobs:
 
   widget-tests:
     name: Run Widget Tests
-    needs: format-and-lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
