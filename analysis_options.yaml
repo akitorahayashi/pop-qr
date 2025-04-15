@@ -1,5 +1,5 @@
 # Format: dart format .
-# Lint: flutter analyze
+# Lint: dart analyze
 
 include: package:flutter_lints/flutter.yaml
 

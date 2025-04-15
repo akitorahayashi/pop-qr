@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           flutter-version: '3.29.3'
           channel: 'stable'
@@ -51,13 +51,13 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
         
-      - name: Run Flutter Format Check
+      - name: Run Dart Format Check
         run: |
-          flutter format --set-exit-if-changed .
+          dart format --set-exit-if-changed .
         
-      - name: Run Flutter Analyze
+      - name: Run Dart Analyze
         run: |
-          flutter analyze --no-fatal-infos
+          dart analyze
       
       - name: Check for changes after formatting
         run: |
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           flutter-version: '3.29.3'
           channel: 'stable'
@@ -98,7 +98,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           flutter-version: '3.29.3'
           channel: 'stable'
@@ -132,7 +132,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           flutter-version: '3.29.3'
           channel: 'stable'
@@ -163,7 +163,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v2.12.0
         with:
           flutter-version: '3.29.3'
           channel: 'stable'
