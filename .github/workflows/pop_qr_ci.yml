@@ -92,7 +92,7 @@ jobs:
       - name: Upload Android Build
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-build
+          name: popqr-android-debug-build
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
 
@@ -122,15 +122,31 @@ jobs:
           
       - name: Archive iOS Build
         run: |
+          # アーカイブディレクトリの作成
           mkdir -p ./archives
-          cd build/ios/Debug-iphonesimulator
-          zip -r ../../../archives/ios-debug-build.zip .
+          
+          # アーカイブファイル名の生成（タイムスタンプ付き）
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          ARCHIVE_NAME="popqr-ios-debug-build_${TIMESTAMP}.zip"
+          
+          # アーカイブの作成
+          echo "ビルドディレクトリをアーカイブ中..."
+          cd build/ios/iphoneos
+          zip -r ../../../archives/$ARCHIVE_NAME .
+          
+          if [ $? -eq 0 ]; then
+            echo "アーカイブが正常に作成されました: $ARCHIVE_NAME"
+            echo "アーカイブサイズ: $(du -h "../../../archives/$ARCHIVE_NAME" | cut -f1)"
+          else
+            echo "エラー: アーカイブの作成に失敗しました"
+            exit 1
+          fi
       
       - name: Upload iOS Build
         uses: actions/upload-artifact@v4
         with:
-          name: ios-debug-build
-          path: ./archives/ios-debug-build.zip
+          name: popqr-ios-debug-build
+          path: ./archives/*.zip
           retention-days: 7
 
   unit-tests:
