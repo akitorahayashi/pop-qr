@@ -13,6 +13,7 @@ Future<void> showEditableFieldDialog({
 }) {
   return showCupertinoDialog<void>(
     context: context,
+    barrierDismissible: true,
     builder:
         (BuildContext context) => _EditableFieldDialog(
           title: title,

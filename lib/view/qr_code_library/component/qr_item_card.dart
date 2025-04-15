@@ -23,49 +23,25 @@ class AnimatedCard extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 表示アニメーション用
-    final animationController = useAnimationController(
-      duration: const Duration(milliseconds: 400),
-      initialValue: 1.0,
-    );
+    // User interaction state
+    final isPressed = useState(false);
 
-    // 削除アニメーション用のエフェクト
-    useEffect(() {
-      if (isRemoving.value) {
-        animationController.reverse();
-      }
-      return null;
-    }, [isRemoving.value]);
-
-    // 表示時のアニメーション
-    useEffect(() {
-      animationController.reset();
-      Future.delayed(Duration(milliseconds: 100 * index), () {
-        animationController.forward();
-      });
-      return null;
-    }, const []);
-
-    return AnimatedBuilder(
-      animation: animationController,
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: animationController,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.2),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(
-                parent: animationController,
-                curve: Curves.easeOutCubic,
-              ),
-            ),
-            child: child,
-          ),
-        );
+    return GestureDetector(
+      onTapDown: (_) {
+        isPressed.value = true;
       },
-      child: child,
+      onTapUp: (_) {
+        isPressed.value = false;
+      },
+      onTapCancel: () {
+        isPressed.value = false;
+      },
+      child: AnimatedScale(
+        scale: isPressed.value ? 0.9 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        child: child,
+      ),
     );
   }
 }
@@ -149,12 +125,7 @@ class QRItemCard extends HookConsumerWidget {
         if (controller.isCompleted) return;
         controller.forward();
       });
-      return () => controller.dispose(); // Dispose controller
-    }, const []);
-
-    // 削除コントローラーの破棄
-    useEffect(() {
-      return () => removeController.dispose(); // Dispose controller
+      return null; // Let flutter_hooks handle the controller disposal
     }, const []);
 
     // 不透明度アニメーション
