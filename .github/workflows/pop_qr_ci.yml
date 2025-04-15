@@ -50,6 +50,9 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Run Dart Format Check
         run: |
@@ -79,6 +82,9 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Build Android APK
         run: flutter build apk --debug
@@ -106,6 +112,9 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Build iOS
         run: |
@@ -140,6 +149,9 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Run Flutter Unit Tests
         run: flutter test test/unit_test/
@@ -171,6 +183,9 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Run Flutter Widget Tests
         run: flutter test test/widget_test/
