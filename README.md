@@ -21,57 +21,25 @@ UI → Provider → StorageService → Provider → UI（更新）
 
 ```
 pop_qr/
-├── lib/
-│   ├── app.dart
-│   ├── main.dart
-│   │
-│   ├── model/                      
-│   │   └── qr_item.dart
-│   │
-│   ├── provider/                   
-│   │   └── qr_items_provider.dart
-│   │
-│   ├── service/                    
-│   │   └── storage_service.dart
-│   │
-│   ├── view/                       
-│   │   ├── pop_up_qr.dart
-│   │   │
-│   │   ├── qr_code_library/
-│   │   │   ├── qr_code_library.dart
-│   │   │   │
-│   │   │   └── component/              
-│   │   │       ├── qr_item_card.dart
-│   │   │       ├── floating_action_button.dart
-│   │   │       │
-│   │   │       └── add_qr_bottom_sheet/  
-│   │   │           ├── add_qr_bottom_sheet.dart
-│   │   │           │
-│   │   │           └── component/          
-│   │   │               ├── add_qr_button.dart
-│   │   │               ├── pq_input_field.dart
-│   │   │               ├── emoji_selector.dart
-│   │   │               ├── pq_validation_condition.dart
-│   │   │               └── qr_icon_data.dart
-│   │   │
-│   │   ├── dialog/               
-│   │   │   └── editable_field_dialog.dart
-│   │   │
-│   │   └── sub_view/               
-│   │       └── error_view.dart
-│   │
-│   ├── resource/                   
-│   │   ├── default_qr_items.dart
-│   │   └── emoji_list.dart
-│   │
-│   └── util/                       
-│       └── pq_validation.dart
-│
-├── test/                          
-│   ├── unit_test/
-│   └── widget_test/
-│
-└── pubspec.yaml
+├── .github/                     # GitHub Actions ワークフロー
+│   └── workflows/
+├── lib/                         # Flutter アプリケーションコード
+│   ├── app.dart                 # アプリケーションのルートウィジェット
+│   ├── main.dart                # アプリケーションのエントリポイント
+│   ├── model/                   # データモデル (例: qr_item.dart)
+│   ├── provider/                # 状態管理 (Riverpod プロバイダー)
+│   ├── resource/                # 静的リソース (例: デフォルトデータ、絵文字リスト)
+│   ├── service/                 # 外部サービス連携 (例: ストレージ)
+│   ├── util/                    # ユーティリティ関数
+│   └── view/                    # UI ウィジェット
+│       ├── qr_code_library/     # QRコードライブラリ画面
+│       ├── pop_up_qr.dart       # QRコードポップアップ表示
+│       ├── dialog/              # ダイアログ
+│       └── sub_view/            # 補助的なビュー
+├── test/                        # テストコード
+│   ├── unit_test/               # ユニットテスト
+│   └── widget_test/             # ウィジェットテスト
+└── pubspec.yaml                 # プロジェクトの依存関係とメタデータ
 ```
 
 ## 使用パッケージ
@@ -162,3 +130,21 @@ QRコードの追加時には、入力値のバリデーションを行います
 - URLは http:// または https:// で始まる有効なURL形式
 
 バリデーション条件はフォーム下部にグレーテキストで常に表示されます。
+
+## CI/CD パイプライン
+
+このプロジェクトでは、GitHub Actions を利用して CI/CD パイプラインを構築しています。`.github/workflows/` ディレクトリ以下に設定ファイルが格納されています。
+
+- **`ci-cd-pipeline.yml`**: メインとなるパイプラインです。Pull Request作成時やmainブランチへのプッシュ時にトリガーされ、他のワークフローを順次実行します。
+- その他の `.yml` ファイル (`build-and-test.yml`, `code-quality.yml`, `copilot-review.yml` など): パイプラインの各ステップを実行する、呼び出し可能なワークフローです。`ci-cd-pipeline.yml` から呼び出されます。
+
+詳細なワークフローの説明は `.github/workflows/README.md` を参照してください。
+
+## 開発環境
+
+- **Flutter**: バージョン `3.29.3`
+- **主要コマンド**:
+  - 依存関係のインストール: `flutter pub get`
+  - コード生成: `flutter pub run build_runner build --delete-conflicting-outputs`
+  - フォーマット: `dart format .`
+  - 静的解析: `dart analyze`

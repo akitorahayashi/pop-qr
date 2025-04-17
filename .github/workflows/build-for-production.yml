@@ -1,0 +1,195 @@
+name: Build for Production
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: "Optional Release Tag for GitHub Release (e.g., v1.2.3)"
+        required: false
+        type: string
+      pr_number:
+        description: "Pull Request Number (if applicable, otherwise 0)"
+        required: false
+        type: number
+        default: 0
+
+jobs:
+  build-android-release:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.12.0
+        with:
+          flutter-version: '3.29.3' # Use your project's specific version
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      # ===== Google Play リリース時にコメントを外して設定 =====
+      # 事前に以下のGitHub Secretsを設定する必要があります:
+      # - ANDROID_KEYSTORE_BASE64: アップロードキーストア (JKS) の Base64 エンコード文字列
+      # - ANDROID_KEYSTORE_PASSWORD: キーストアのパスワード
+      # - ANDROID_KEY_ALIAS: キーストア内のキーのエイリアス
+      # - ANDROID_KEY_PASSWORD: キーのパスワード
+      # =======================================================
+      # - name: Setup Android Signing
+      #   env:
+      #     KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      #     KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      #     KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      #     KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      #   run: |
+      #     echo "Setting up Android signing key..."
+      #     echo $KEYSTORE_BASE64 | base64 --decode > android/app/upload-keystore.jks
+      #     echo "storeFile=../app/upload-keystore.jks" > android/key.properties
+      #     echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+      #     echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+      #     echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+
+      # ===== 現在のビルド設定 (リリースモード、署名なし) =====
+      # Google Playリリース時は上記 Setup Android Signing を有効化してください。
+      # 有効化しない場合、Flutter はデフォルトでデバッグキーを使用して署名します。
+      - name: Build Android App Bundle (Release, Unsigned/Debug Key)
+        run: flutter build appbundle --release
+
+      - name: Build Android APKs (Release, Unsigned/Debug Key)
+        run: flutter build apk --release --split-per-abi
+      # =======================================================
+
+      - name: Archive Android Builds (Move APKs)
+        run: |
+          mkdir -p ./build/app/outputs/apk/release
+          # Move release APKs to a consistent location for upload
+          mv build/app/outputs/flutter-apk/*-release.apk ./build/app/outputs/apk/release/ || echo "No release APKs found/moved"
+
+      - name: Upload Android App Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android-bundle
+          path: build/app/outputs/bundle/release/*.aab
+          retention-days: 7
+
+      - name: Upload Android APKs Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android-apks
+          path: build/app/outputs/apk/release/*.apk
+          retention-days: 7
+
+  build-ios-release:
+    name: Build iOS Release
+    runs-on: macos-latest # iOS builds require macOS
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ===== App Store リリース時にコメントを外して設定 =====
+      # 事前に以下のGitHub Secretsを設定する必要があります:
+      # - BUILD_CERTIFICATE_BASE64: 配布用証明書 (.p12) の Base64 エンコード文字列
+      # - P12_PASSWORD: 証明書のパスワード
+      # - BUILD_PROVISION_PROFILE_BASE64: 配布用プロビジョニングプロファイル (.mobileprovision) の Base64
+      # - KEYCHAIN_PASSWORD: (任意) 一時キーチェーンのパスワード
+      # =======================================================
+      # - name: Install Apple Certificate and Provisioning Profile
+      #   env:
+      #     BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      #     P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      #     BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      #     KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      #   run: |
+      #     # Create temporary keychain
+      #     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+      #     security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+      #     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+      #     security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+      #     # Import certificate
+      #     CERTIFICATE_PATH=$RUNNER_TEMP/dist_certificate.p12
+      #     echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+      #     security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+      #     security list-keychain -d user -s $KEYCHAIN_PATH
+      #     # Install provisioning profile
+      #     mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+      #     PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/$(uuidgen).mobileprovision"
+      #     echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.12.0
+        with:
+          flutter-version: '3.29.3' # Use your project's specific version
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      # ===== 現在のビルド設定 (リリースモード、署名なし) =====
+      # App Storeリリース時は上記 Install... Step を有効化し、以下の --no-codesign を削除してください。
+      - name: Build iOS IPA (Release, Unsigned)
+        run: flutter build ipa --release --no-codesign
+      # =======================================================
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ios-ipa
+          # Path is typically build/ios/ipa/*.ipa after `flutter build ipa`
+          path: build/ios/ipa/*.ipa
+          retention-days: 7
+
+  create-github-release:
+    name: Create Draft GitHub Release
+    needs: [build-android-release, build-ios-release] # Run after builds complete
+    runs-on: ubuntu-latest
+    # Only run if a release_tag was provided and builds succeeded
+    if: ${{ inputs.release_tag != '' && success() }}
+    permissions:
+      contents: write # Needed to create releases
+      actions: read # Needed to download artifacts
+    steps:
+      - name: Download Android Bundle Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-android-bundle
+          path: ./release-artifacts/android-bundle
+
+      - name: Download Android APKs Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-android-apks
+          path: ./release-artifacts/android-apks
+
+      - name: Download iOS IPA Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-ios-ipa
+          path: ./release-artifacts/ios-ipa
+
+      - name: List downloaded artifacts (for debugging)
+        run: ls -lR ./release-artifacts
+
+      - name: Create GitHub Release Draft
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: Release ${{ inputs.release_tag }}
+          draft: true # Create a draft release
+          prerelease: false
+          # Attach all downloaded artifacts
+          files: |
+            ./release-artifacts/android-bundle/*
+            ./release-artifacts/android-apks/*
+            ./release-artifacts/ios-ipa/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # body_path: path/to/release_notes.md # Optional: path to release notes 

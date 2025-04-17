@@ -1,0 +1,62 @@
+name: Code Quality Check
+
+on:
+  workflow_call:
+    outputs:
+      result:
+        description: "Check Result (success/failure)"
+        value: ${{ jobs.check.outputs.result }}
+
+jobs:
+  check:
+    name: Format and Lint
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.set-result.outputs.status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.12.0
+        with:
+          flutter-version: '3.29.3' # またはプロジェクト固有のバージョンを使用
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 分析前にコード生成が必要な場合は build_runner を実行
+      - name: Run build_runner (if needed)
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run Dart Format Check
+        id: format
+        run: dart format --set-exit-if-changed .
+        continue-on-error: true # フォーマットが失敗しても analyze を実行するために継続
+
+      - name: Run Dart Analyze
+        id: analyze
+        run: dart analyze
+        continue-on-error: true # 結合されたステータスを報告するために継続
+
+      - name: Set result status
+        id: set-result
+        run: |
+          if [[ "${{ steps.format.outcome }}" == "success" && \
+                "${{ steps.analyze.outcome }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "Code quality checks passed."
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "Code quality checks failed."
+            # format ステップの結果を具体的にチェック
+            if [[ "${{ steps.format.outcome }}" != "success" ]]; then
+              echo "::error::Code formatting issues found. Run 'dart format .' locally and commit changes." # コードフォーマットの問題が見つかりました。ローカルで 'dart format .' を実行し、変更をコミットしてください。
+            fi
+            if [[ "${{ steps.analyze.outcome }}" != "success" ]]; then
+              echo "::error::Dart analysis found issues."
+            fi
+            exit 1 # ステップを失敗させる
+          fi 

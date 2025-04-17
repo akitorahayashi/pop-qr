@@ -1,0 +1,56 @@
+name: Copilot PR Review
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: "Review Target Pull Request Number"
+        required: true
+        type: number
+
+jobs:
+  copilot-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read         # Needed to check out code if necessary, and for context
+      pull-requests: write # Needed to request reviewers and add comments
+
+    steps:
+      - name: Request review from Copilot
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ inputs.pr_number }};
+            if (!prNumber) {
+              console.error('Pull request number input is invalid.');
+              return;
+            }
+            console.log(`Attempting to request review from Copilot for PR #${prNumber}`);
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: ["copilot"]
+              });
+              console.log(`Successfully requested review from Copilot for PR #${prNumber}`);
+            } catch (error) {
+              console.error("Error requesting review from Copilot:", error);
+              const errorMessage = `GitHub Copilotによるレビューをリクエストしようとしましたが、エラーが発生しました。\n\nリポジトリの設定でGitHub Copilotのコードレビュー機能が有効になっていることを確認してください。\nGitHub Teamプラン以上が必要な場合があります。\n\nエラー詳細: ${error.message}`;
+
+              // Add a comment to the PR explaining the failure
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: errorMessage
+                });
+                console.log(`Added comment to PR #${prNumber} about Copilot review failure.`);
+              } catch (commentError) {
+                console.error("Failed to add comment to PR about Copilot error:", commentError);
+              }
+              // Optionally, fail the workflow step if review request is critical
+              // core.setFailed(`Failed to request review from Copilot: ${error.message}`);
+            } 

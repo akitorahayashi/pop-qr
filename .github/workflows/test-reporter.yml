@@ -1,0 +1,139 @@
+name: Test Reporter
+
+on:
+  workflow_call:
+    inputs:
+      pull_request_number:
+        description: 'Pull Request number'
+        required: true
+        type: number
+
+permissions:
+  checks: write          # テスト結果をチェックとして公開するために必要
+  actions: read          # 成果物をダウンロードするために必要
+  pull-requests: write   # PRにコメントするために必要
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # actions/github-scriptのコンテキストに必要
+        uses: actions/checkout@v4
+
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-junit # 名前は build-and-test.yml のアップロードステップと一致する必要があります
+          path: ./test-results
+
+      - name: List downloaded files (for debugging)
+        run: |
+          echo "--- Downloaded Test Results ---"
+          ls -lR ./test-results
+
+      - name: Publish Test Report as Check
+        uses: mikepenz/action-junit-report@v4
+        # JUnit XMLファイルが存在する場合のみ実行
+        if: hashFiles('./test-results/junit.xml') != ''
+        with:
+          report_paths: './test-results/junit.xml'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_failure: false # テストが失敗した場合でもレポーターステップ自体を失敗させない
+          require_tests: false # テストが見つからない場合 (例: 空ファイル) でも失敗させない
+          check_name: 'Flutter Test Suite Results' # チェックタブに表示される名前
+          # summary: 'Unit and Widget Test Results' # オプションの要約
+
+      - name: Create or Update PR Comment
+        # JUnit XMLファイルがダウンロードされ、存在する場合のみ実行
+        if: hashFiles('./test-results/junit.xml') != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ inputs.pull_request_number }};
+            if (!prNumber) {
+              console.error('Pull request number input is invalid.');
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+            const commentMarker = '<!-- flutter-test-report -->';
+            const fs = require('fs');
+            const path = require('path');
+
+            const junitPath = './test-results/junit.xml';
+            let testSummary = 'ℹ️ Test Results: No JUnit report found.';
+            let reportLink = '';
+
+            if (fs.existsSync(junitPath)) {
+              // action-junit-report によって作成されたチェック実行へのリンクを生成しようと試みる
+              // 注意: 正確なチェック実行URLの生成は複雑なため、チェックタブへのリンクの方が信頼性が高いです。
+              // const checkRunName = 'Flutter Test Suite Results'; // 上記の 'check_name' と一致する必要があります
+              // const checksUrl = `https://github.com/${owner}/${repo}/pull/${prNumber}/checks`;
+              // reportLink = `[完全なレポートを表示](${checksUrl})`;
+              reportLink = 'チェックタブで利用可能です。'
+
+              // 概要のための基本的な解析 (オプション)
+              try {
+                const xmlContent = fs.readFileSync(junitPath, 'utf8');
+                const testsuites = xmlContent.match(/<testsuite[^>]*>/g);
+                let totalTests = 0;
+                let totalFailures = 0;
+                let totalErrors = 0;
+
+                if (testsuites) {
+                  const testsMatch = xmlContent.match(/tests="(\d+)"/);
+                  const failuresMatch = xmlContent.match(/failures="(\d+)"/);
+                  const errorsMatch = xmlContent.match(/errors="(\d+)"/);
+                  if (testsMatch) totalTests = parseInt(testsMatch[1], 10);
+                  if (failuresMatch) totalFailures = parseInt(failuresMatch[1], 10);
+                  if (errorsMatch) totalErrors = parseInt(errorsMatch[1], 10);
+                }
+
+                if (totalTests > 0) {
+                  const passedTests = totalTests - totalFailures - totalErrors;
+                  if (totalFailures === 0 && totalErrors === 0) {
+                     testSummary = `✅ 全ての ${totalTests} テストが成功しました。 ${reportLink}`;
+                  } else {
+                     testSummary = `❌ ${totalTests} テスト中 ${totalFailures + totalErrors} 件が失敗しました。 ${reportLink}`;
+                  }
+                } else {
+                  testSummary = `⚠️ レポートにテストが見つかりませんでした。 ${reportLink}`;
+                }
+
+              } catch (e) {
+                console.error("Error parsing JUnit XML:", e);
+                testSummary = `⚠️ テスト結果を解析できませんでした。 ${reportLink}`;
+              }
+            }
+
+            let commentBody = `${commentMarker}\n\n## テスト概要\n\n${testSummary}\n`;
+
+            // 既存のコメントを検索
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+            });
+            const existingComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes(commentMarker)
+            );
+
+            if (existingComment) {
+              console.log(`Updating comment ${existingComment.id} on PR #${prNumber}`);
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body: commentBody,
+              });
+            } else {
+              console.log(`Creating new comment on PR #${prNumber}`);
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: commentBody,
+              });
+            } 
