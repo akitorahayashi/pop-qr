@@ -1,4 +1,4 @@
-name: Build & Test
+name: Test
 
 on:
   workflow_call:
@@ -12,7 +12,7 @@ on:
       #   value: test-results
 
 jobs:
-  test:
+  run-flutter-tests:
     name: Run Flutter Tests
     runs-on: ubuntu-latest
     outputs:
@@ -31,6 +31,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # build_runner を実行してコード生成
       - name: Run build_runner
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
