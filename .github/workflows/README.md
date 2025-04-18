@@ -6,7 +6,7 @@
 
 - **`ci-cd-pipeline.yml`**: メインとなる統合CI/CDパイプラインです。Pull Request作成時やmain/masterブランチへのプッシュ時にトリガーされ、後述の他のワークフローを順次実行します。
 - **`code-quality.yml`**: コード品質チェック（Dart format, Dart analyze）を実行します。
-- **`build-and-test.yml`**: Flutterアプリのテスト（ユニットテスト、ウィジェットテスト）を実行し、JUnitレポートを生成します。
+- **`flutter-test.yml`**: Flutterアプリのテスト（ユニットテスト、ウィジェットテスト）を実行し、JUnitレポートを生成します。
 - **`test-reporter.yml`**: テスト結果のレポートを作成し、PRにコメントします。
 - **`copilot-review.yml`**: GitHub CopilotによるPRレビューを自動化します。
 - **`build-for-production.yml`**: 本番用（または開発用）のAndroid (APK/App Bundle) および iOS (IPA) ビルドを実行します。
@@ -18,13 +18,13 @@
 このワークフローが、パイプライン全体の流れを管理します。トリガー（Push, Pull Request, 手動実行）に応じて、以下のワークフローを適切な順序と条件で実行します。
 
 1.  `code-quality.yml` を実行し、コード品質をチェックします。
-2.  `build-and-test.yml` を実行し、テスト（ユニット/ウィジェット）を行います。
+2.  `flutter-test.yml` を実行し、テスト（ユニット/ウィジェット）を行います。
 3.  `test-reporter.yml` を実行し、テスト結果をレポートします (Pull Request時のみ)。
 4.  Pull Requestの場合、`copilot-review.yml` を実行し、GitHub Copilotによる自動レビューを実施します (テスト成功時のみ)。
 5.  main/masterブランチへのPushの場合、`build-for-production.yml` を実行し、本番用ビルドを生成します (品質チェックとテスト成功時のみ)。
 6.  最後に、パイプライン全体の完了ステータスをPull Requestにコメントします。
 
-### `build-and-test.yml`
+### `flutter-test.yml`
 
 `ci-cd-pipeline.yml` から呼び出され、主に以下のステップを実行します:
 
@@ -45,7 +45,7 @@
 
 ### `test-reporter.yml`
 
-`ci-cd-pipeline.yml` から呼び出され (Pull Request時のみ)、`build-and-test.yml` で生成されたテスト結果ファイルを処理します:
+`ci-cd-pipeline.yml` から呼び出され (Pull Request時のみ)、`flutter-test.yml` で生成されたテスト結果ファイルを処理します:
 
 -   `test-results-unit-junit` および `test-results-widget-junit` アーティファクトをダウンロードします。
 -   `mikepenz/action-junit-report` アクションを使用して、JUnitレポートをGitHub Checks APIに公開します。
@@ -82,7 +82,6 @@ main/masterブランチへのPush時に `ci-cd-pipeline.yml` から呼び出さ�
 
 -   主な実行環境: Ubuntu (大部分のジョブ), macOS (iOSビルド用)
 -   Flutterバージョン: 3.29.3 (ワークフロー内で指定)
--   依存ツール管理: Flutter/Dart pub
 -   テストレポート形式: JUnit XML (`junitreport` パッケージ使用)
 -   リリース成果物: Android App Bundle (.aab), Android APK (.apk), iOS IPA (.ipa)
--   アーティファクト保持期間: 7日 (設定変更可能) 
+-   アーティファクト保持期間: 7日

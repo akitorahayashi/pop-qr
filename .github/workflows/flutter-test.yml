@@ -1,19 +1,19 @@
-name: Test
+name: Flutter Test
 
 on:
   workflow_call:
     outputs:
       result:
         description: "Overall test result (success/failure)"
-        value: ${{ jobs.test.outputs.result }}
+        value: ${{ jobs.run-tests.outputs.result }}
       # 後で必要になった場合のための成果物の出力パス
       # test_results_path:
       #   description: "テスト結果成果物へのパス"
       #   value: test-results
 
 jobs:
-  run-flutter-tests:
-    name: Run Flutter Tests
+  run-tests:
+    name: Run Tests
     runs-on: ubuntu-latest
     outputs:
       result: ${{ steps.set-final-result.outputs.status }} # 最終結果のステータス

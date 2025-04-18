@@ -23,8 +23,14 @@ jobs:
       - name: Download test results artifact
         uses: actions/download-artifact@v4
         with:
-          name: test-results-junit # 名前は build-and-test.yml のアップロードステップと一致する必要があります
-          path: ./test-results
+          name: test-results-unit-junit # flutter-test.yml のアップロードステップと一致するように更新
+          path: ./test-results/unit
+
+      - name: Download widget test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-widget-junit # flutter-test.yml のアップロードステップと一致するように更新
+          path: ./test-results/widget
 
       - name: List downloaded files (for debugging)
         run: |
@@ -34,9 +40,9 @@ jobs:
       - name: Publish Test Report as Check
         uses: mikepenz/action-junit-report@v4
         # JUnit XMLファイルが存在する場合のみ実行
-        if: hashFiles('./test-results/junit.xml') != ''
+        if: hashFiles('./test-results/**/*.xml') != ''
         with:
-          report_paths: './test-results/junit.xml'
+          report_paths: './test-results/**/*.xml' # ユニットテストとウィジェットテストの両方のレポートを含める
           github_token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_failure: false # テストが失敗した場合でもレポーターステップ自体を失敗させない
           require_tests: false # テストが見つからない場合 (例: 空ファイル) でも失敗させない
@@ -45,7 +51,7 @@ jobs:
 
       - name: Create or Update PR Comment
         # JUnit XMLファイルがダウンロードされ、存在する場合のみ実行
-        if: hashFiles('./test-results/junit.xml') != ''
+        if: hashFiles('./test-results/**/*.xml') != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -60,34 +66,32 @@ jobs:
             const commentMarker = '<!-- flutter-test-report -->';
             const fs = require('fs');
             const path = require('path');
+            const glob = require('glob');
 
-            const junitPath = './test-results/junit.xml';
+            // 複数のJUnitレポートファイルを検索
+            const junitFiles = glob.sync('./test-results/**/*.xml');
             let testSummary = 'ℹ️ Test Results: No JUnit report found.';
-            let reportLink = '';
+            let reportLink = 'チェックタブで利用可能です。';
 
-            if (fs.existsSync(junitPath)) {
-              // action-junit-report によって作成されたチェック実行へのリンクを生成しようと試みる
-              // 注意: 正確なチェック実行URLの生成は複雑なため、チェックタブへのリンクの方が信頼性が高いです。
-              // const checkRunName = 'Flutter Test Suite Results'; // 上記の 'check_name' と一致する必要があります
-              // const checksUrl = `https://github.com/${owner}/${repo}/pull/${prNumber}/checks`;
-              // reportLink = `[完全なレポートを表示](${checksUrl})`;
-              reportLink = 'チェックタブで利用可能です。'
+            if (junitFiles.length > 0) {
+              // JUnitレポートが見つかった場合の処理
+              
+              // 全テストファイルの結果を集計
+              let totalTests = 0;
+              let totalFailures = 0;
+              let totalErrors = 0;
 
-              // 概要のための基本的な解析 (オプション)
               try {
-                const xmlContent = fs.readFileSync(junitPath, 'utf8');
-                const testsuites = xmlContent.match(/<testsuite[^>]*>/g);
-                let totalTests = 0;
-                let totalFailures = 0;
-                let totalErrors = 0;
-
-                if (testsuites) {
+                // 各レポートファイルを処理
+                for (const junitPath of junitFiles) {
+                  const xmlContent = fs.readFileSync(junitPath, 'utf8');
                   const testsMatch = xmlContent.match(/tests="(\d+)"/);
                   const failuresMatch = xmlContent.match(/failures="(\d+)"/);
                   const errorsMatch = xmlContent.match(/errors="(\d+)"/);
-                  if (testsMatch) totalTests = parseInt(testsMatch[1], 10);
-                  if (failuresMatch) totalFailures = parseInt(failuresMatch[1], 10);
-                  if (errorsMatch) totalErrors = parseInt(errorsMatch[1], 10);
+                  
+                  if (testsMatch) totalTests += parseInt(testsMatch[1], 10);
+                  if (failuresMatch) totalFailures += parseInt(failuresMatch[1], 10);
+                  if (errorsMatch) totalErrors += parseInt(errorsMatch[1], 10);
                 }
 
                 if (totalTests > 0) {
