@@ -60,33 +60,22 @@ jobs:
       - name: Build Android App Bundle (Release, Unsigned/Debug Key)
         run: flutter build appbundle --release
 
-      # --- App Bundle を ci-outputs へ移動 ---
-      - name: Stage Android App Bundle
-        run: |
-          mkdir -p ./ci-outputs/build/android/bundle/release
-          mv build/app/outputs/bundle/release/*.aab ./ci-outputs/build/android/bundle/release/
-
       - name: Build Android APKs (Release, Unsigned/Debug Key)
         run: flutter build apk --release --split-per-abi
       # =======================================================
-
-      - name: Archive Android Builds (Move APKs)
-        run: |
-          mkdir -p ./ci-outputs/build/android/apk/release
-          mv build/app/outputs/flutter-apk/*-release.apk ./ci-outputs/build/android/apk/release/ || echo "No release APKs found/moved"
 
       - name: Upload Android App Bundle Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ci-android-bundle
-          path: ./ci-outputs/build/android/bundle/release/*.aab
+          path: build/app/outputs/bundle/release/*.aab
           retention-days: 7
 
       - name: Upload Android APKs Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ci-android-apks
-          path: ./ci-outputs/build/android/apk/release/*.apk
+          path: build/app/outputs/flutter-apk/*-release.apk
           retention-days: 7
 
   build-ios-release:
@@ -143,18 +132,11 @@ jobs:
         run: flutter build ipa --release --no-codesign
       # =======================================================
 
-      # --- IPA を ci-outputs へ移動 ---
-      - name: Stage iOS IPA
-        run: |
-          mkdir -p ./ci-outputs/build/ios/ipa
-          mv build/ios/ipa/*.ipa ./ci-outputs/build/ios/ipa/
-
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ci-ios-ipa
-          # パスは通常 `flutter build ipa` の後、build/ios/ipa/*.ipa になる
-          path: ./ci-outputs/build/ios/ipa/*.ipa
+          path: build/ios/ipa/*.ipa
           retention-days: 7
 
   create-github-release:
@@ -169,22 +151,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ci-android-bundle
-          path: ./ci-outputs/build/android-bundle
+          path: ./build/app/outputs/bundle/release
 
       - name: Download Android APKs Artifact
         uses: actions/download-artifact@v4
         with:
           name: ci-android-apks
-          path: ./ci-outputs/build/android-apks
+          path: ./build/app/outputs/flutter-apk
 
       - name: Download iOS IPA Artifact
         uses: actions/download-artifact@v4
         with:
           name: ci-ios-ipa
-          path: ./ci-outputs/build/ios-ipa
+          path: ./build/ios/ipa
 
       - name: List downloaded artifacts (for debugging)
-        run: ls -lR ./ci-outputs/build
+        run: ls -lR ./build
 
       - name: Create GitHub Release Draft
         uses: softprops/action-gh-release@v1
@@ -194,8 +176,8 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            ./ci-outputs/build/android-bundle/*
-            ./ci-outputs/build/android-apks/*
-            ./ci-outputs/build/ios-ipa/*
+            ./build/app/outputs/bundle/release/*.aab
+            ./build/app/outputs/flutter-apk/*-release.apk
+            ./build/ios/ipa/*.ipa
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: path/to/release_notes.md
+          # body_path: path/to/release_notes.md # Consider adding release notes

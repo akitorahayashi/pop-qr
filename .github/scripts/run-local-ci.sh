@@ -1,10 +1,6 @@
 #!/bin/bash
 set -e
 
-# === Configuration ===
-OUTPUT_DIR="ci-outputs/test-results"
-IOS_DERIVED_DATA_PATH="$OUTPUT_DIR/DerivedData" # Path where Xcode build artifacts are stored
-
 # === Helper Functions ===
 step() {
   echo ""
@@ -131,8 +127,8 @@ if [ "$BUILD_NEEDED" = true ]; then
 
     if [[ "$(uname)" == "Darwin" ]]; then
       step "Building iOS Debug Version for Simulator (macOS only)"
-      flutter build ios --simulator --debug --no-codesign -derivedDataPath="$IOS_DERIVED_DATA_PATH" || fail "flutter build ios --debug failed"
-      success "iOS Debug Build completed. DerivedData at: $IOS_DERIVED_DATA_PATH"
+      flutter build ios --simulator --debug --no-codesign || fail "flutter build ios --debug failed"
+      success "iOS Debug Build completed."
     else
       step "Skipping iOS debug build (not on macOS)."
     fi
@@ -150,16 +146,6 @@ fi
 if [ "$TESTS_TO_RUN" = true ]; then
     step "Running Tests"
     TEST_CMD="flutter test"
-    USE_DERIVED_DATA=""
-
-    if [ "$TEST_WITHOUT_BUILDING" = true ] && [[ "$(uname)" == "Darwin" ]] && [ -d "$IOS_DERIVED_DATA_PATH" ]; then
-        echo "ℹ️ Attempting to use existing DerivedData for iOS tests: $IOS_DERIVED_DATA_PATH"
-        # Note: Flutter test command itself might not directly accept DerivedData path for unit/widget tests.
-        # For *integration_test* on devices/simulators, specific build commands might be needed.
-        # This part assumes `flutter test` might benefit or that separate integration test runs would use it.
-        # If using `integration_test` package, you might need different commands here.
-        USE_DERIVED_DATA="true" # Flag indicating we intended to reuse
-    fi
 
     # Select tests to run
     TEST_PATHS=""
