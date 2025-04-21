@@ -20,7 +20,7 @@
 2.  **`test` (using `flutter-test.yml`)** テスト（ユニット/ウィジェット）を行います
 3.  **`report` (using `test-reporter.yml`)** テスト結果をレポートします (Pull Request時のみ、`test` ジョブ完了後)
 4.  **`review` (using `copilot-review.yml`)** GitHub Copilotによる自動レビューを実施します (Pull Request時のみ、`test` ジョブ成功後)
-5.  **`release-build` (using `build-for-production.yml`)** 本番用ビルドを生成します (main/masterブランチへのPushの場合のみ、`format-and-analyze`, `test`, `report` ジョブが全て成功した場合)
+5.  **`release-build` (using `build-for-production.yml`)** 本番用ビルドを生成します (`format-and-analyze`, `test` ジョブが全て成功した場合)
 6.  **`notify` (using `notify-completion.yml`)** パイプラインの全ジョブ完了後 (常に実行)、各ジョブの最終ステータスと成果物へのリンクを含む要約コメントをPull Requestに投稿または更新します
 
 ### `flutter-test.yml`
@@ -61,7 +61,7 @@
 
 ### `build-for-production.yml`
 
-`ci-cd-pipeline.yml` の `release-build` ジョブから呼び出され (main/masterブランチへのPush時、先行ジョブ成功時のみ)、本番リリース向けのビルドを実行します
+`ci-cd-pipeline.yml` の `release-build` ジョブから呼び出され (先行ジョブ成功時のみ)、本番リリース向けのビルドを実行します
 
 -   **Android** `flutter build appbundle --release` と `flutter build apk --release --split-per-abi` を使用して、リリース用のApp Bundle (.aab) とAPK (.apk) をビルドします (署名設定は現在コメントアウト)ビルド成果物を `ci-outputs/build/android/` 以下に移動し、`ci-android-bundle` と `ci-android-apks` という名前でアーティファクトとしてアップロードします
 -   **iOS** `flutter build ipa --release --no-codesign` を使用して、リリース用のIPA (.ipa) をビルドします (現在コード署名は無効、`macos-latest` ランナーが必要)ビルド成果物を `ci-outputs/build/ios/` 以下に移動し、`ci-ios-ipa` という名前でアーティファクトとしてアップロードします

@@ -49,12 +49,10 @@ jobs:
     needs: [format-and-analyze, test]
     if: |
       needs.format-and-analyze.result == 'success' &&
-      needs.test.result == 'success' &&
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      needs.test.result == 'success'
     uses: ./.github/workflows/build-for-production.yml
     with:
       release_tag: prod-${{ github.run_number }}
-      pr_number: ${{ github.event.pull_request.number || 0 }}
     permissions:
       contents: write
       actions: read

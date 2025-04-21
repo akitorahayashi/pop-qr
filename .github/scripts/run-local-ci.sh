@@ -130,12 +130,8 @@ if [ "$BUILD_NEEDED" = true ]; then
     flutter build apk --debug || fail "flutter build apk --debug failed"
 
     if [[ "$(uname)" == "Darwin" ]]; then
-      step "Building iOS Debug Version (macOS only)"
-      # For testing, ensure DerivedData path exists and is used if specified
-      # Note: `flutter test` for integration tests might handle its own build.
-      # This build is more for `flutter build ios --debug` consistency check.
-      mkdir -p "$IOS_DERIVED_DATA_PATH" # Ensure directory exists
-      flutter build ios --debug --no-codesign -derivedDataPath="$IOS_DERIVED_DATA_PATH" || fail "flutter build ios --debug failed"
+      step "Building iOS Debug Version for Simulator (macOS only)"
+      flutter build ios --simulator --debug --no-codesign -derivedDataPath="$IOS_DERIVED_DATA_PATH" || fail "flutter build ios --debug failed"
       success "iOS Debug Build completed. DerivedData at: $IOS_DERIVED_DATA_PATH"
     else
       step "Skipping iOS debug build (not on macOS)."
