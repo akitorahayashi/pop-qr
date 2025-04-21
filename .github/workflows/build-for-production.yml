@@ -15,7 +15,6 @@ on:
 
 jobs:
   build-android-release:
-    name: Build Android Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -74,7 +73,6 @@ jobs:
       - name: Archive Android Builds (Move APKs)
         run: |
           mkdir -p ./ci-outputs/build/android/apk/release
-          # リリースAPKを ci-outputs ステージングディレクトリへ移動
           mv build/app/outputs/flutter-apk/*-release.apk ./ci-outputs/build/android/apk/release/ || echo "No release APKs found/moved"
 
       - name: Upload Android App Bundle Artifact
@@ -92,7 +90,6 @@ jobs:
           retention-days: 7
 
   build-ios-release:
-    name: Build iOS Release
     runs-on: macos-latest # iOSビルドにはmacOSが必要
     steps:
       - name: Checkout code
@@ -161,14 +158,12 @@ jobs:
           retention-days: 7
 
   create-github-release:
-    name: Create Draft GitHub Release
-    needs: [build-android-release, build-ios-release] # ビルド完了後に実行
+    needs: [build-android-release, build-ios-release]
     runs-on: ubuntu-latest
-    # release_tagが提供され、ビルドが成功した場合のみ実行
     if: ${{ inputs.release_tag != '' && success() }}
     permissions:
-      contents: write # リリース作成に必要
-      actions: read # アーティファクトのダウンロードに必要
+      contents: write
+      actions: read
     steps:
       - name: Download Android Bundle Artifact
         uses: actions/download-artifact@v4
@@ -196,12 +191,11 @@ jobs:
         with:
           tag_name: ${{ inputs.release_tag }}
           name: Release ${{ inputs.release_tag }}
-          draft: true # ドラフトリリースを作成
+          draft: true
           prerelease: false
-          # ダウンロードされたすべてのアーティファクトを添付
           files: |
             ./ci-outputs/build/android-bundle/*
             ./ci-outputs/build/android-apks/*
             ./ci-outputs/build/ios-ipa/*
           token: ${{ secrets.GITHUB_TOKEN }}
-          # body_path: path/to/release_notes.md # オプション: リリースノートへのパス 
+          body_path: path/to/release_notes.md

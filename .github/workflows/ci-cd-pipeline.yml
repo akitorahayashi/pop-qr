@@ -33,7 +33,7 @@ jobs:
     secrets: inherit
 
   review:
-    name: Code Review (Copilot)
+    name: Copilot Review
     needs: test
     if: github.event_name == 'pull_request' && needs.test.result == 'success'
     uses: ./.github/workflows/copilot-review.yml
@@ -44,7 +44,7 @@ jobs:
       contents: read
     secrets: inherit
 
-  build:
+  release-build:
     name: Production Build
     needs: [format-and-analyze, test, report]
     if: |
@@ -63,8 +63,8 @@ jobs:
 
   notify:
     name: Notify Completion
-    needs: [format-and-analyze, test, report, review, build]
-    if: always() && github.event_name == 'pull_request'
+    needs: [format-and-analyze, test, report, review, release-build]
+    if: always()
     permissions:
       pull-requests: write
     uses: ./.github/workflows/notify-completion.yml
@@ -75,4 +75,4 @@ jobs:
       flutter_test_needs: ${{ toJSON(needs.test) }}
       test_report_needs: ${{ toJSON(needs.report) }}
       code_review_needs: ${{ toJSON(needs.review) }}
-      production_build_needs: ${{ toJSON(needs.build) }}
+      production_build_needs: ${{ toJSON(needs.release-build) }}

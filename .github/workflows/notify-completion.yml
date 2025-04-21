@@ -34,7 +34,6 @@ on:
 
 jobs:
   notify:
-    name: Notify Completion Status
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
