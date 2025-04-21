@@ -8,26 +8,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  # デフォルトの権限、再利用可能なワークフローは独自の特定のニーズを定義します
   contents: read
 
 jobs:
-  # 1. コード品質チェック
   format-and-analyze:
     name: Code Quality Check
     uses: ./.github/workflows/code-quality.yml
-    # secrets: inherit # 将来、品質チェックで必要になった場合にシークレットを継承
 
-  # 2. ビルドとテスト
   test:
     name: Flutter Test
     uses: ./.github/workflows/flutter-test.yml
-    # secrets: inherit # 将来、テストで必要になった場合にシークレットを継承
 
-  # 3. テストレポート生成 (PRのみ、テストの実行が必要)
   report:
     name: Test Report
-    needs: test # テスト結果に依存
+    needs: test
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/test-reporter.yml
     with:
@@ -36,13 +30,11 @@ jobs:
       checks: write
       actions: read
       pull-requests: write
-    secrets: inherit # GITHUB_TOKENを暗黙的に渡す
+    secrets: inherit
 
-  # 4. コードレビュー (PRのみ、テストの成功が必要)
   review:
     name: Code Review (Copilot)
     needs: test
-    # テストが成功したPRでのみ実行
     if: github.event_name == 'pull_request' && needs.test.result == 'success'
     uses: ./.github/workflows/copilot-review.yml
     with:
@@ -50,9 +42,8 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
-    secrets: inherit # GITHUB_TOKENを暗黙的に渡す
+    secrets: inherit
 
-  # 5. プロダクションビルド (main/masterへのpushのみ、テストと品質チェックの成功が必要)
   build:
     name: Production Build
     needs: [format-and-analyze, test, report]
@@ -63,36 +54,25 @@ jobs:
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
     uses: ./.github/workflows/build-for-production.yml
     with:
-      # 実行番号に基づいて、プロダクションビルド用に 'prod-123' のようなタグを生成
       release_tag: prod-${{ github.run_number }}
-      # 可能であればPR番号を渡す (リリースノートのリンクに便利、それ以外は0)
       pr_number: ${{ github.event.pull_request.number || 0 }}
     permissions:
-      contents: write # リリース作成用
-      actions: read   # ワークフロー内で成果物をダウンロードするため
-    secrets: inherit # 署名やリリース作成に必要なシークレットを渡す
+      contents: write
+      actions: read
+    secrets: inherit
 
-  # 6. 完了通知 (常に実行、結果を要約)
   notify:
     name: Notify Completion
-    # 先行するすべての条件付きジョブに依存
     needs: [format-and-analyze, test, report, review, build]
-    # `always()` は、先行するジョブが失敗したりスキップされたりした場合でも、これが実行されることを保証します
     if: always() && github.event_name == 'pull_request'
-    # 必要な権限を呼び出し側で定義
     permissions:
       pull-requests: write
     uses: ./.github/workflows/notify-completion.yml
-    # Pass secrets explicitly (if declared in the reusable workflow)
-    secrets:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
       pr_number: ${{ github.event.pull_request.number || 0 }}
       run_id: ${{ github.run_id }}
-      # Pass the entire needs context for each job
       code_quality_needs: ${{ toJSON(needs.format-and-analyze) }}
       flutter_test_needs: ${{ toJSON(needs.test) }}
       test_report_needs: ${{ toJSON(needs.report) }}
       code_review_needs: ${{ toJSON(needs.review) }}
       production_build_needs: ${{ toJSON(needs.build) }}
-# --- End of File --- # Comment to ensure we replace everything until the end 

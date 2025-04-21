@@ -32,11 +32,6 @@ on:
         required: false
         type: string
 
-    secrets:
-      GITHUB_TOKEN:
-        description: 'GitHub token for API calls'
-        required: true
-
 jobs:
   notify:
     name: Notify Completion Status
