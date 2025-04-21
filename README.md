@@ -1,7 +1,6 @@
 # Pop QR
 
-Pop QRは、URLリンクをQRコードとして保存して、対面で共有するためのアプリです。
-QRコードはカード形式で表示され、タップするとQRコードを表示します。
+Pop QRは、URLリンクを保存して、QRコードとして対面の際に共有できるようにするためのアプリです。
 
 ## アーキテクチャ
 - **UI層**: 画面表示と入力の処理
@@ -21,25 +20,25 @@ UI → Provider → StorageService → Provider → UI（更新）
 
 ```
 pop_qr/
-├── .github/                     # GitHub Actions ワークフロー
+├── .github/
 │   └── workflows/
-├── lib/                         # Flutter アプリケーションコード
-│   ├── app.dart                 # アプリケーションのルートウィジェット
-│   ├── main.dart                # アプリケーションのエントリポイント
-│   ├── model/                   # データモデル (例: qr_item.dart)
-│   ├── provider/                # 状態管理 (Riverpod プロバイダー)
-│   ├── resource/                # 静的リソース (例: デフォルトデータ、絵文字リスト)
-│   ├── service/                 # 外部サービス連携 (例: ストレージ)
-│   ├── util/                    # ユーティリティ関数
-│   └── view/                    # UI ウィジェット
-│       ├── qr_code_library/     # QRコードライブラリ画面
-│       ├── pop_up_qr.dart       # QRコードポップアップ表示
-│       ├── dialog/              # ダイアログ
-│       └── sub_view/            # 補助的なビュー
-├── test/                        # テストコード
-│   ├── unit_test/               # ユニットテスト
-│   └── widget_test/             # ウィジェットテスト
-└── pubspec.yaml                 # プロジェクトの依存関係とメタデータ
+├── ios/
+├── android/
+├── assets/
+├── lib/
+│   ├── resource/
+│   ├── service/
+│   ├── util/
+│   ├── model/
+│   ├── provider/
+│   ├── view/
+│   ├── app.dart
+│   └── main.dart
+├── test/
+│   ├── unit_test/
+│   └── widget_test/
+├── pubspec.yaml
+└── ...
 ```
 
 ## 使用パッケージ
