@@ -68,7 +68,6 @@ jobs:
             const commentMarker = '<!-- flutter-test-report -->';
             const fs = require('fs');
             const path = require('path');
-            const glob = require("glob");
 
             // 複数のJUnitレポートファイルを検索
             const globber = await glob.create('./ci-outputs/test-results/**/*.xml');

@@ -6,10 +6,10 @@ targets:
       include:
         - "lib/**"
         - "pubspec.yaml"
+        - "$package$"
       exclude:
         - test/**
     builders:
-      # `source_gen` のビルダー
       source_gen|combining_builder:
         generate_for:
           - lib/model/*.dart
@@ -17,7 +17,6 @@ targets:
           build_extensions:
             "^lib/model/{{}}.dart": "lib/model/generate/{{}}.g.dart"
 
-      # JSON Serializable のビルダー設定
       json_serializable:
         generate_for:
           - lib/model/*.dart
@@ -25,7 +24,6 @@ targets:
           explicit_to_json: true
           include_if_null: false
 
-      # Freezed のビルダー設定
       freezed:
         generate_for:
           - lib/model/*.dart
