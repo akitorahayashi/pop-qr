@@ -113,9 +113,10 @@ jobs:
               overallIcon = '❓';
             }
 
-            // --- アーティファクトリンク生成 --- 
-            let artifactLinks = '';
+            // --- アーティファクトリンク生成 ---
+            let reportDetails = 'Skipped'; // Use a more descriptive variable name and set default
             const runId = process.env.RUN_ID;
+            // Only try to fetch artifacts if the report job *wasn't* skipped
             if (reportStatus.result !== 'skipped') {
               try {
                 console.log(`Fetching artifacts for run ID: ${runId}`);
@@ -129,49 +130,51 @@ jobs:
                 const unitTestArtifact = artifactList.artifacts.find(a => a.name === 'ci-unit-test-results-junit');
                 const widgetTestArtifact = artifactList.artifacts.find(a => a.name === 'ci-widget-test-results-junit');
 
-                let links = [];
+                let nestedLinks = []; // Use a new array for the nested list items
                  if (unitTestArtifact) {
                    const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${unitTestArtifact.id}`;
-                   links.push(`[Unit Tests Report](${artifactPageUrl})`);
+                   // Add indentation (4 spaces) and '*' for the nested list item
+                   nestedLinks.push(`    *   [Unit Tests Report](${artifactPageUrl})`);
                    console.log(`Found Unit Test artifact: ${unitTestArtifact.id}`);
                  } else {
                     console.log('Unit Test artifact not found.');
                  }
                  if (widgetTestArtifact) {
                    const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${widgetTestArtifact.id}`;
-                   links.push(`[Widget Tests Report](${artifactPageUrl})`);
+                   // Add indentation (4 spaces) and '*' for the nested list item
+                   nestedLinks.push(`    *   [Widget Tests Report](${artifactPageUrl})`);
                     console.log(`Found Widget Test artifact: ${widgetTestArtifact.id}`);
                  } else {
                     console.log('Widget Test artifact not found.');
                  }
 
-                 if (links.length > 0) {
-                   artifactLinks = `${links.join(', ')}`;
+                 if (nestedLinks.length > 0) {
+                   // Join the nested list items with newlines and prepend a newline for formatting
+                   reportDetails = `\\n${nestedLinks.join('\\n')}`;
                  } else {
-                    artifactLinks = 'No report artifacts found';
+                    reportDetails = ' No report artifacts found'; // Add a space for better formatting
                  }
 
               } catch (error) {
                 console.error("Artifactの取得またはリンク生成中にエラーが発生しました:", error);
-                artifactLinks = 'Error fetching artifacts';
+                reportDetails = ' Error fetching artifacts'; // Add a space
               }
-            } else {
-               artifactLinks = 'Skipped';
-            }
+            } // Removed the 'else' block here as reportDetails is already 'Skipped' by default
 
-            // --- コメント本文の構築 --- 
+            // --- コメント本文の構築 ---
             const commentMarker = '<!-- cicd-summary-pop-qr -->';
             const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
 
-            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallIcon}\n\n`;
-            commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\n`;
-            commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\n`;
-            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} - ${artifactLinks}\n`;
-            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\n`;
-            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\n`;
-            commentBody += `\n[View Workflow Run](${workflowRunUrl})\n`;
+            let commentBody = `${commentMarker}\\n\\n## CI/CD Pipeline Summary: ${overallIcon}\\n\\n`;
+            commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\\n`;
+            commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\\n`;
+            // Append the reportDetails (which now contains the nested list or status text) directly after the icon
+            commentBody += `*   **Test Report:** ${getIcon(reportStatus)}${reportDetails}\\n`;
+            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\\n`;
+            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\\n`;
+            commentBody += `\\n[View Workflow Run](${workflowRunUrl})\\n`;
 
-            // --- コメント投稿/更新ロジック --- 
+            // --- コメント投稿/更新ロジック ---
             try {
               console.log(`Looking for existing comment on PR #${prNumber}`);
               const { data: comments } = await github.rest.issues.listComments({
