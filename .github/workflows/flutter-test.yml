@@ -81,18 +81,22 @@ jobs:
           WIDGET_ERRORS=0
 
           if [ -f "ci-outputs/test-results/unit/junit.xml" ]; then
-            # JUnitレポートから失敗数を抽出
-            UNIT_FAILURES=$(grep -oP 'failures="\K[0-9]+' ci-outputs/test-results/unit/junit.xml || echo "0")
-            UNIT_ERRORS=$(grep -oP 'errors="\K[0-9]+' ci-outputs/test-results/unit/junit.xml || echo "0")
+            # JUnitレポートから失敗数を抽出 (最初のマッチのみ取得し、空の場合は0をデフォルトとする)
+            UNIT_FAILURES=$(grep -oP 'failures="\\K[0-9]+' ci-outputs/test-results/unit/junit.xml | head -n 1)
+            UNIT_ERRORS=$(grep -oP 'errors="\\K[0-9]+' ci-outputs/test-results/unit/junit.xml | head -n 1)
+            UNIT_FAILURES=${UNIT_FAILURES:-0}
+            UNIT_ERRORS=${UNIT_ERRORS:-0}
             echo "Unit test failures: $UNIT_FAILURES, errors: $UNIT_ERRORS"
           else
             echo "Unit test report not found"
           fi
 
           if [ -f "ci-outputs/test-results/widget/junit.xml" ]; then
-            # JUnitレポートから失敗数を抽出
-            WIDGET_FAILURES=$(grep -oP 'failures="\K[0-9]+' ci-outputs/test-results/widget/junit.xml || echo "0")
-            WIDGET_ERRORS=$(grep -oP 'errors="\K[0-9]+' ci-outputs/test-results/widget/junit.xml || echo "0")
+            # JUnitレポートから失敗数を抽出 (最初のマッチのみ取得し、空の場合は0をデフォルトとする)
+            WIDGET_FAILURES=$(grep -oP 'failures="\\K[0-9]+' ci-outputs/test-results/widget/junit.xml | head -n 1)
+            WIDGET_ERRORS=$(grep -oP 'errors="\\K[0-9]+' ci-outputs/test-results/widget/junit.xml | head -n 1)
+            WIDGET_FAILURES=${WIDGET_FAILURES:-0}
+            WIDGET_ERRORS=${WIDGET_ERRORS:-0}
             echo "Widget test failures: $WIDGET_FAILURES, errors: $WIDGET_ERRORS"
           else
             echo "Widget test report not found"

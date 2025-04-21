@@ -10,7 +10,6 @@ environment:
   # Dart SDK のバージョン制約
   sdk: ^3.7.2
 
-# アプリケーションが動作するために必要なパッケージ
 dependencies:
   # Flutter SDK自体
   flutter:
@@ -19,28 +18,27 @@ dependencies:
   # iOS スタイルのアイコンを使用するためのパッケージ
   cupertino_icons: ^1.0.8
 
-  # 状態管理ライブラリ
+  # 状態管理パッケージ
   flutter_riverpod: ^2.5.1
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.21.0
 
-  # QRコード生成ライブラリ
+  # QRコード生成パッケージ
   qr_flutter: ^4.1.0
 
-  # キーバリューストアによるデータ永続化ライブラリ
+  # データ永続化パッケージ
   shared_preferences: ^2.2.2
 
-  # コード生成 (Freezed, JSONシリアライゼーション)
+  # コード生成
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
   # ユーティリティ
-  uuid: ^4.3.3 # UUID生成
-  url_launcher: ^6.3.1 # URLを外部ブラウザで開く
+  uuid: ^4.3.3
+  url_launcher: ^6.3.1
 
-# 開発中にのみ必要なパッケージ (テスト、リント、コード生成など)
+# 開発中にのみ必要なパッケージ
 dev_dependencies:
-  # Flutter のテストフレームワーク
   flutter_test:
     sdk: flutter
 
@@ -48,15 +46,14 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   # コード生成ツール
-  build_runner: ^2.4.8 # コード生成を実行する
-  freezed: ^2.4.7 # 不変クラス/モデル生成
-  json_serializable: ^6.7.1 # JSONシリアライズ/デシリアライズのコード生成
+  build_runner: ^2.4.8
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
 
-  # モックライブラリ (テスト用)
+  # モックパッケージ
   mockito: ^5.4.4
 
-# flutter_launcher_icons パッケージの設定 (アプリアイコン生成用)
-# 実行コマンド: flutter pub run flutter_launcher_icons:main
+# $ flutter pub run flutter_launcher_icons:main
 flutter_icons:
   android: true # Android 用アイコンを生成
   ios: true # iOS 用アイコンを生成
@@ -65,12 +62,9 @@ flutter_icons:
   # image_path: "assets/app_icon/app_icon_focus_link.png"
   # image_path: "assets/app_icon/app_icon_balloon_link.png"
 
-# Flutter 固有の設定
 flutter:
-  # Material Design を使用する
   uses-material-design: true
 
-  # アプリに含めるアセットファイル
   assets:
     - assets/app_icon/app_icon_balloon_link.png
     - assets/app_icon/app_icon_balloon_qr.png
