@@ -9,7 +9,7 @@ on:
         type: number
 
 jobs:
-  copilot-review:
+  review:
     runs-on: ubuntu-latest
     permissions:
       contents: read         

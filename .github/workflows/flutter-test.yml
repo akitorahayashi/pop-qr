@@ -12,7 +12,6 @@ on:
 
 jobs:
   run-tests:
-    name: Run Tests
     runs-on: ubuntu-latest
     outputs:
       result: ${{ steps.set-final-result.outputs.status }}
@@ -47,26 +46,28 @@ jobs:
       - name: Run Unit Tests with JUnit Output
         id: run-unit-tests
         run: |
+          set -eo pipefail
           if [ -d "test/unit_test" ]; then
-            flutter test --machine test/unit_test/ | junitreport > ci-outputs/test-results/unit/junit.xml
+            flutter test --machine test/unit_test/ 2>&1 | junitreport > ci-outputs/test-results/unit/junit.xml
           else
             echo "Unit test directory not found. Creating dummy successful report."
             echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/unit/junit.xml
             exit 0
           fi
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Run Widget Tests with JUnit Output
         id: run-widget-tests
         run: |
+          set -eo pipefail
           if [ -d "test/widget_test" ]; then
-            flutter test --machine test/widget_test/ | junitreport > ci-outputs/test-results/widget/junit.xml
+            flutter test --machine test/widget_test/ 2>&1 | junitreport > ci-outputs/test-results/widget/junit.xml
           else
             echo "Widget test directory not found. Creating dummy successful report."
             echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/widget/junit.xml
             exit 0
           fi
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Set final result status
         id: set-final-result

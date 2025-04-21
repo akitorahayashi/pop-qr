@@ -9,7 +9,6 @@ on:
 
 jobs:
   check:
-    name: Format and Lint
     runs-on: ubuntu-latest
     outputs:
       result: ${{ steps.set-result.outputs.status }}
