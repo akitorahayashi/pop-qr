@@ -12,8 +12,8 @@ jobs:
   copilot-review:
     runs-on: ubuntu-latest
     permissions:
-      contents: read         # Needed to check out code if necessary, and for context
-      pull-requests: write # Needed to request reviewers and add comments
+      contents: read         
+      pull-requests: write
 
     steps:
       - name: Request review from Copilot
@@ -39,7 +39,7 @@ jobs:
               console.error("Error requesting review from Copilot:", error);
               const errorMessage = `GitHub Copilotによるレビューをリクエストしようとしましたが、エラーが発生しました。\n\nリポジトリの設定でGitHub Copilotのコードレビュー機能が有効になっていることを確認してください。\nGitHub Teamプラン以上が必要な場合があります。\n\nエラー詳細: ${error.message}`;
 
-              // Add a comment to the PR explaining the failure
+              // エラーを説明するコメントをPRに追加
               try {
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
@@ -51,6 +51,6 @@ jobs:
               } catch (commentError) {
                 console.error("Failed to add comment to PR about Copilot error:", commentError);
               }
-              // Optionally, fail the workflow step if review request is critical
+              // オプション: レビューリクエストが重要な場合はワークフローステップを失敗させる
               // core.setFailed(`Failed to request review from Copilot: ${error.message}`);
             } 

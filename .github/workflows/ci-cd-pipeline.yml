@@ -13,21 +13,21 @@ permissions:
 
 jobs:
   # 1. コード品質チェック
-  code-quality:
+  format-and-analyze:
     name: Code Quality Check
     uses: ./.github/workflows/code-quality.yml
     # secrets: inherit # 将来、品質チェックで必要になった場合にシークレットを継承
 
   # 2. ビルドとテスト
-  flutter-test:
+  test:
     name: Flutter Test
     uses: ./.github/workflows/flutter-test.yml
     # secrets: inherit # 将来、テストで必要になった場合にシークレットを継承
 
   # 3. テストレポート生成 (PRのみ、テストの実行が必要)
-  test-report:
+  report:
     name: Test Report
-    needs: flutter-test # テスト結果に依存
+    needs: test # テスト結果に依存
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/test-reporter.yml
     with:
@@ -39,11 +39,11 @@ jobs:
     secrets: inherit # GITHUB_TOKENを暗黙的に渡す
 
   # 4. コードレビュー (PRのみ、テストの成功が必要)
-  code-review:
+  review:
     name: Code Review (Copilot)
-    needs: flutter-test
+    needs: test
     # テストが成功したPRでのみ実行
-    if: github.event_name == 'pull_request' && needs.flutter-test.result == 'success'
+    if: github.event_name == 'pull_request' && needs.test.result == 'success'
     uses: ./.github/workflows/copilot-review.yml
     with:
       pr_number: ${{ github.event.pull_request.number }}
@@ -53,12 +53,13 @@ jobs:
     secrets: inherit # GITHUB_TOKENを暗黙的に渡す
 
   # 5. プロダクションビルド (main/masterへのpushのみ、テストと品質チェックの成功が必要)
-  production-build:
+  build:
     name: Production Build
-    needs: [code-quality, flutter-test]
+    needs: [format-and-analyze, test, report]
     if: |
-      needs.code-quality.result == 'success' &&
-      needs.flutter-test.result == 'success' &&
+      needs.format-and-analyze.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.report.result == 'success' &&
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
     uses: ./.github/workflows/build-for-production.yml
     with:
@@ -72,102 +73,26 @@ jobs:
     secrets: inherit # 署名やリリース作成に必要なシークレットを渡す
 
   # 6. 完了通知 (常に実行、結果を要約)
-  notify-completion:
+  notify:
     name: Notify Completion
-    runs-on: ubuntu-latest
     # 先行するすべての条件付きジョブに依存
-    needs: [code-quality, flutter-test, test-report, code-review, production-build]
+    needs: [format-and-analyze, test, report, review, build]
     # `always()` は、先行するジョブが失敗したりスキップされたりした場合でも、これが実行されることを保証します
     if: always() && github.event_name == 'pull_request'
+    # 必要な権限を呼び出し側で定義
     permissions:
-      # issues: write # PRにのみコメントする場合は不要
       pull-requests: write
-    steps:
-      - name: Summarize Results and Comment on PR
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const prNumber = ${{ github.event.pull_request.number }};
-            if (!prNumber) {
-              console.log('Not a pull request, skipping notification comment.');
-              return;
-            }
-
-            const { owner, repo } = context.repo;
-            const commentMarker = '<!-- cicd-summary-pop-qr -->';
-
-            // ステータスアイコンを取得するヘルパー
-            const getStatus = (result, skipped) => {
-              if (skipped) return '⏭️'; // スキップ
-              if (result === 'success') return '✅'; // 成功
-              if (result === 'failure') return '❌'; // 失敗
-              return '❓'; // 不明/保留中
-            };
-
-            // ジョブがスキップされたかどうかを確認 (例: 条件が満たされなかったため)
-            // ジョブの結果が空または 'skipped' であり、ワークフロー全体がキャンセルされていない場合にジョブはスキップされます
-            const isSkipped = (jobNeed) => {
-              return !jobNeed || jobNeed.result === 'skipped' || jobNeed.result === '';
-            };
-
-            // 結果を取得し、潜在的なスキップを処理
-            const qualityResult = needs.code-quality.result;
-            const qualitySkipped = isSkipped(needs.code-quality);
-
-            const testResult = needs.flutter-test.result;
-            const testSkipped = isSkipped(needs.flutter-test);
-
-            const reportResult = needs.test-report.result;
-            const reportSkipped = isSkipped(needs.test-report);
-
-            const reviewResult = needs.code-review.result;
-            const reviewSkipped = isSkipped(needs.code-review);
-
-            const prodBuildResult = needs.production-build.result;
-            const prodBuildSkipped = isSkipped(needs.production-build);
-
-            // 全体的なステータスを決定
-            const overallStatus = (qualityResult === 'success' && testResult === 'success') ? '✅ Succeeded' : '❌ Failed or Incomplete';
-            if (qualitySkipped || testSkipped) {
-              // コアチェックがスキップされた場合、ステータスは不明確または不完全です
-            }
-
-            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallStatus}\n\n`;
-            commentBody += `*   **Code Quality:** ${getStatus(qualityResult, qualitySkipped)}\n`;
-            commentBody += `*   **Build & Tests:** ${getStatus(testResult, testSkipped)}\n`;
-            commentBody += `*   **Test Report:** ${getStatus(reportResult, reportSkipped)}\n`;
-            commentBody += `*   **Code Review:** ${getStatus(reviewResult, reviewSkipped)}\n`;
-            commentBody += `*   **Production Build:** ${getStatus(prodBuildResult, prodBuildSkipped)}\n`;
-
-            // ワークフロー実行へのリンクを追加
-            commentBody += `\n[View Workflow Run](https://github.com/${owner}/${repo}/actions/runs/${{ github.run_id }})\n`;
-
-            // 既存のコメントを検索
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-            });
-            const existingComment = comments.find(c =>
-              c.user.login === 'github-actions[bot]' &&
-              c.body.includes(commentMarker)
-            );
-
-            if (existingComment) {
-              console.log(`Updating comment ${existingComment.id} on PR #${prNumber}`);
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existingComment.id,
-                body: commentBody,
-              });
-            } else {
-              console.log(`Creating new comment on PR #${prNumber}`);
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: prNumber,
-                body: commentBody,
-              });
-            } 
+    uses: ./.github/workflows/notify-completion.yml
+    # Pass secrets explicitly (if declared in the reusable workflow)
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      pr_number: ${{ github.event.pull_request.number || 0 }}
+      run_id: ${{ github.run_id }}
+      # Pass the entire needs context for each job
+      code_quality_needs: ${{ toJSON(needs.format-and-analyze) }}
+      flutter_test_needs: ${{ toJSON(needs.test) }}
+      test_report_needs: ${{ toJSON(needs.report) }}
+      code_review_needs: ${{ toJSON(needs.review) }}
+      production_build_needs: ${{ toJSON(needs.build) }}
+# --- End of File --- # Comment to ensure we replace everything until the end 

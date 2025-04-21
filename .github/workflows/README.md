@@ -29,9 +29,9 @@
 `ci-cd-pipeline.yml` から呼び出され、主に以下のステップを実行します:
 
 1. **Setup**: Flutter環境をセットアップし、依存関係をインストールし、`build_runner` を実行します。
-2. **Testing**: 
+2. **Testing**:
    - `flutter test --machine` を実行して全てのユニットテストとウィジェットテストを実行します。
-   - 出力を `junitreport` パッケージ経由で `test-results/.../junit.xml` として保存します。
+   - 出力を `junitreport` パッケージ経由で `ci-outputs/test-results/.../junit.xml` として保存します。
 3. **Artifacts**: 生成されたJUnitレポート (`test-results-unit-junit`, `test-results-widget-junit`) をアップロードします。
 
 ### `code-quality.yml`
@@ -47,7 +47,7 @@
 
 `ci-cd-pipeline.yml` から呼び出され (Pull Request時のみ)、`flutter-test.yml` で生成されたテスト結果ファイルを処理します:
 
--   `test-results-unit-junit` および `test-results-widget-junit` アーティファクトをダウンロードします。
+-   `ci-unit-test-results-junit` および `ci-widget-test-results-junit` アーティファクトをダウンロードし、`ci-outputs/test-results` 以下に展開します。
 -   `mikepenz/action-junit-report` アクションを使用して、JUnitレポートをGitHub Checks APIに公開します。
 -   JUnitレポートを解析し、テスト結果のサマリーを作成します。
 -   Pull Requestにテスト結果のサマリー（✅ または ❌）とChecksタブへのリンクを含むコメントを投稿または更新します。
@@ -64,8 +64,8 @@ Pull Request時に `ci-cd-pipeline.yml` から呼び出され (テスト成功�
 
 main/masterブランチへのPush時に `ci-cd-pipeline.yml` から呼び出され (品質チェックとテスト成功時のみ)、本番リリース向けのビルドを実行します:
 
--   **Android**: `flutter build appbundle --release` と `flutter build apk --release` を使用して、リリース用のApp Bundle (.aab) とAPK (.apk) をビルドします (署名設定は現在コメントアウト)。ビルド成果物をアップロードします。
--   **iOS**: `flutter build ipa --release` を使用して、リリース用のIPA (.ipa) をビルドします (現在コード署名は無効、macOSランナーが必要)。ビルド成果物をアップロードします。
+-   **Android**: `flutter build appbundle --release` と `flutter build apk --release` を使用して、リリース用のApp Bundle (.aab) とAPK (.apk) をビルドします (署名設定は現在コメントアウト)。ビルド成果物を `ci-outputs/build/android/` 以下に移動し、`ci-android-bundle` と `ci-android-apks` という名前でアーティファクトとしてアップロードします。
+-   **iOS**: `flutter build ipa --release` を使用して、リリース用のIPA (.ipa) をビルドします (現在コード署名は無効、macOSランナーが必要)。ビルド成果物を `ci-outputs/build/ios/` 以下に移動し、`ci-ios-ipa` という名前でアーティファクトとしてアップロードします。
 -   **GitHub Release**: `release_tag` が指定された場合、ビルド成果物をダウンロードし、`softprops/action-gh-release` を使用してGitHub Releasesにドラフトを作成し、生成されたファイルを添付します。
 
 ## 使用方法
@@ -78,10 +78,34 @@ main/masterブランチへのPush時に `ci-cd-pipeline.yml` から呼び出さ�
 
 個別のワークフローは通常、直接実行するのではなく、`ci-cd-pipeline.yml` によって呼び出されます。
 
+## ローカルでのCIチェック実行
+
+開発中に、GitHub Actions で実行される主要なチェック（フォーマット、静的解析、テスト）をローカルで事前に確認するためのスクリプトが用意されています。これにより、PR を作成する前に問題を修正できます。
+
+**実行方法:**
+以下のコマンドを実行します
+```bash
+$ .github/scripts/local-ci-check.sh
+```
+
+このスクリプトは以下の処理を実行します
+
+- `flutter pub get`
+- `flutter pub run build_runner build --delete-conflicting-outputs`
+- `dart format --set-exit-if-changed .`
+- `dart analyze`
+- `flutter test`
+- `flutter build apk --debug` (Androidのデバッグビルド確認)
+- `flutter build ios --debug --no-codesign` (macOS環境の場合のみ、iOSのデバッグビルド確認)
+
+スクリプトがエラーなく完了すれば、CI の主要なチェックは成功する可能性が高いです。
+
 ## 技術仕様
 
 -   主な実行環境: Ubuntu (大部分のジョブ), macOS (iOSビルド用)
 -   Flutterバージョン: 3.29.3 (ワークフロー内で指定)
 -   テストレポート形式: JUnit XML (`junitreport` パッケージ使用)
 -   リリース成果物: Android App Bundle (.aab), Android APK (.apk), iOS IPA (.ipa)
+-   主要な出力ディレクトリ: `ci-outputs/` (テスト結果、ビルド成果物)
 -   アーティファクト保持期間: 7日
+

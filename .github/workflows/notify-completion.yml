@@ -1,0 +1,160 @@
+name: Notify Completion Reusable Workflow
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'The number of the pull request'
+        required: true
+        type: number
+      run_id:
+        description: 'The ID of the current workflow run'
+        required: true
+        type: number
+      code_quality_needs:
+        description: 'Needs context for format-and-analyze job'
+        required: false
+        type: string
+      flutter_test_needs:
+        description: 'Needs context for run-tests job'
+        required: false
+        type: string
+      test_report_needs:
+        description: 'Needs context for report job'
+        required: false
+        type: string
+      code_review_needs:
+        description: 'Needs context for copilot-review job'
+        required: false
+        type: string
+      production_build_needs:
+        description: 'Needs context for build-for-production job'
+        required: false
+        type: string
+
+    secrets:
+      GITHUB_TOKEN:
+        description: 'GitHub token for API calls'
+        required: true
+
+jobs:
+  notify:
+    name: Notify Completion Status
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Summarize Results and Comment on PR
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          RUN_ID: ${{ inputs.run_id }}
+          NEEDS_QUALITY: ${{ toJSON(inputs.code_quality_needs) }}
+          NEEDS_TEST: ${{ toJSON(inputs.flutter_test_needs) }}
+          NEEDS_REPORT: ${{ toJSON(inputs.test_report_needs) }}
+          NEEDS_REVIEW: ${{ toJSON(inputs.code_review_needs) }}
+          NEEDS_PROD_BUILD: ${{ toJSON(inputs.production_build_needs) }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
+            if (!prNumber || prNumber === 0) {
+              console.log('プルリクエストではない、またはPR番号が提供されていないため、通知コメントをスキップします。');
+              return;
+            }
+
+            // JSON文字列をオブジェクトにパースし直す
+            // 潜在的なパースエラーや null/undefined な入力を処理
+            const parseNeeds = (jsonString) => {
+              try {
+                return JSON.parse(jsonString || '{}');
+              } catch (e) {
+                console.warn("needs コンテキストのパースに失敗しました:", jsonString, e);
+                return {}; // エラー時は空のオブジェクトを返す
+              }
+            };
+
+            const qualityNeeds = parseNeeds(process.env.NEEDS_QUALITY);
+            const testNeeds = parseNeeds(process.env.NEEDS_TEST);
+            const reportNeeds = parseNeeds(process.env.NEEDS_REPORT);
+            const reviewNeeds = parseNeeds(process.env.NEEDS_REVIEW);
+            const prodBuildNeeds = parseNeeds(process.env.NEEDS_PROD_BUILD);
+
+            // needs オブジェクトから結果とスキップ状態を判断
+            const getJobStatus = (needsContext) => {
+              const result = needsContext?.result || 'skipped'; // コンテキストや結果がない場合は skipped をデフォルトとする
+              const skipped = result === 'skipped';
+              return { result, skipped };
+            };
+
+            const qualityStatus = getJobStatus(qualityNeeds);
+            const testStatus = getJobStatus(testNeeds);
+            const reportStatus = getJobStatus(reportNeeds);
+            const reviewStatus = getJobStatus(reviewNeeds);
+            const prodBuildStatus = getJobStatus(prodBuildNeeds);
+
+            const runId = process.env.RUN_ID;
+            const { owner, repo } = context.repo;
+            const commentMarker = '<!-- cicd-summary-pop-qr -->';
+
+            const getIcon = (status) => {
+              if (status.skipped) return '⏭️';
+              if (status.result === 'success') return '✅';
+              if (status.result === 'failure') return '❌';
+              return '❓'; // 不明、キャンセルなど
+            };
+
+            let overallStatus = '❓ 不明';
+            const coreChecksFailed = qualityStatus.result === 'failure' || testStatus.result === 'failure';
+            const coreChecksSucceeded = qualityStatus.result === 'success' && testStatus.result === 'success';
+            const coreChecksRan = !qualityStatus.skipped && !testStatus.skipped;
+
+            if (coreChecksRan && coreChecksSucceeded) {
+              overallStatus = '✅ 成功';
+            } else if (coreChecksFailed) {
+              overallStatus = '❌ 失敗または不完全';
+            } else {
+              overallStatus = '❓ スキップまたは不完全';
+            }
+
+            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallStatus}\n\n`;
+            commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\n`;
+            commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\n`;
+            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} (PRのみ)\n`;
+            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)} (PRのみ)\n`;
+            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)} (main/masterのみ)\n`;
+            commentBody += `\n[View Workflow Run](https://github.com/${owner}/${repo}/actions/runs/${runId})\n`;
+
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: owner,
+                repo: repo,
+                issue_number: prNumber,
+              });
+
+              const existingComment = comments.find(c =>
+                c.user && c.user.login === 'github-actions[bot]' &&
+                c.body && c.body.includes(commentMarker)
+              );
+
+              if (existingComment) {
+                console.log(`Updating comment ${existingComment.id} on PR #${prNumber}`);
+                await github.rest.issues.updateComment({
+                  owner: owner,
+                  repo: repo,
+                  comment_id: existingComment.id,
+                  body: commentBody,
+                });
+              } else {
+                console.log(`Creating new comment on PR #${prNumber}`);
+                await github.rest.issues.createComment({
+                  owner: owner,
+                  repo: repo,
+                  issue_number: prNumber,
+                  body: commentBody,
+                });
+              }
+            } catch (error) {
+              console.error("GitHub APIとの対話中にエラーが発生しました:", error);
+              core.setFailed(`コメントの投稿または更新に失敗しました: ${error.message}`);
+            } 

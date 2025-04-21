@@ -20,38 +20,40 @@ jobs:
       - name: Checkout code # actions/github-scriptのコンテキストに必要
         uses: actions/checkout@v4
 
-      - name: Download test results artifact
+      # ユニットテスト結果をダウンロード
+      - name: Download unit test results
         uses: actions/download-artifact@v4
         with:
-          name: test-results-unit-junit # flutter-test.yml のアップロードステップと一致するように更新
-          path: ./test-results/unit
+          name: ci-unit-test-results-junit
+          path: ./ci-outputs/test-results/unit
 
-      - name: Download widget test results artifact
+      # ウィジェットテスト結果をダウンロード
+      - name: Download widget test results
         uses: actions/download-artifact@v4
         with:
-          name: test-results-widget-junit # flutter-test.yml のアップロードステップと一致するように更新
-          path: ./test-results/widget
+          name: ci-widget-test-results-junit
+          path: ./ci-outputs/test-results/widget
 
-      - name: List downloaded files (for debugging)
+      # ダウンロードしたファイルの一覧を表示
+      - name: List downloaded files
         run: |
           echo "--- Downloaded Test Results ---"
-          ls -lR ./test-results
+          ls -lR ./ci-outputs/test-results
 
       - name: Publish Test Report as Check
         uses: mikepenz/action-junit-report@v4
         # JUnit XMLファイルが存在する場合のみ実行
-        if: hashFiles('./test-results/**/*.xml') != ''
+        if: hashFiles('./ci-outputs/test-results/**/*.xml') != ''
         with:
-          report_paths: './test-results/**/*.xml' # ユニットテストとウィジェットテストの両方のレポートを含める
+          report_paths: './ci-outputs/test-results/**/*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
           fail_on_failure: false # テストが失敗した場合でもレポーターステップ自体を失敗させない
-          require_tests: false # テストが見つからない場合 (例: 空ファイル) でも失敗させない
-          check_name: 'Flutter Test Suite Results' # チェックタブに表示される名前
-          # summary: 'Unit and Widget Test Results' # オプションの要約
+          require_tests: true # レポートにテストケースが含まれていない場合、ステップを失敗させる
+          check_name: 'Flutter Test Suite Results'
 
       - name: Create or Update PR Comment
         # JUnit XMLファイルがダウンロードされ、存在する場合のみ実行
-        if: hashFiles('./test-results/**/*.xml') != ''
+        if: hashFiles('./ci-outputs/test-results/**/*.xml') != ''
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -69,7 +71,7 @@ jobs:
             const glob = require('glob');
 
             // 複数のJUnitレポートファイルを検索
-            const junitFiles = glob.sync('./test-results/**/*.xml');
+            const junitFiles = glob.sync('./ci-outputs/test-results/**/*.xml');
             let testSummary = 'ℹ️ Test Results: No JUnit report found.';
             let reportLink = 'チェックタブで利用可能です。';
 

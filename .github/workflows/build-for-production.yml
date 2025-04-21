@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       release_tag:
-        description: "Optional Release Tag for GitHub Release (e.g., v1.2.3)"
+        description: "GitHubリリースのためのオプションのリリース Tag (例: v1.2.3)"
         required: false
         type: string
       pr_number:
@@ -24,7 +24,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.12.0
         with:
-          flutter-version: '3.29.3' # Use your project's specific version
+          flutter-version: '3.29.3' # プロジェクト固有のバージョンを使用
           channel: 'stable'
           cache: true
 
@@ -61,33 +61,39 @@ jobs:
       - name: Build Android App Bundle (Release, Unsigned/Debug Key)
         run: flutter build appbundle --release
 
+      # --- App Bundle を ci-outputs へ移動 ---
+      - name: Stage Android App Bundle
+        run: |
+          mkdir -p ./ci-outputs/build/android/bundle/release
+          mv build/app/outputs/bundle/release/*.aab ./ci-outputs/build/android/bundle/release/
+
       - name: Build Android APKs (Release, Unsigned/Debug Key)
         run: flutter build apk --release --split-per-abi
       # =======================================================
 
       - name: Archive Android Builds (Move APKs)
         run: |
-          mkdir -p ./build/app/outputs/apk/release
-          # Move release APKs to a consistent location for upload
-          mv build/app/outputs/flutter-apk/*-release.apk ./build/app/outputs/apk/release/ || echo "No release APKs found/moved"
+          mkdir -p ./ci-outputs/build/android/apk/release
+          # リリースAPKを ci-outputs ステージングディレクトリへ移動
+          mv build/app/outputs/flutter-apk/*-release.apk ./ci-outputs/build/android/apk/release/ || echo "No release APKs found/moved"
 
       - name: Upload Android App Bundle Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-android-bundle
-          path: build/app/outputs/bundle/release/*.aab
+          name: ci-android-bundle
+          path: ./ci-outputs/build/android/bundle/release/*.aab
           retention-days: 7
 
       - name: Upload Android APKs Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-android-apks
-          path: build/app/outputs/apk/release/*.apk
+          name: ci-android-apks
+          path: ./ci-outputs/build/android/apk/release/*.apk
           retention-days: 7
 
   build-ios-release:
     name: Build iOS Release
-    runs-on: macos-latest # iOS builds require macOS
+    runs-on: macos-latest # iOSビルドにはmacOSが必要
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -106,17 +112,17 @@ jobs:
       #     BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
       #     KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
       #   run: |
-      #     # Create temporary keychain
+      #     # 一時キーチェーンを作成
       #     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
       #     security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
       #     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
       #     security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-      #     # Import certificate
+      #     # 証明書をインポート
       #     CERTIFICATE_PATH=$RUNNER_TEMP/dist_certificate.p12
       #     echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
       #     security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
       #     security list-keychain -d user -s $KEYCHAIN_PATH
-      #     # Install provisioning profile
+      #     # プロビジョニングプロファイルをインストール
       #     mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
       #     PROFILE_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/$(uuidgen).mobileprovision"
       #     echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
@@ -124,7 +130,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.12.0
         with:
-          flutter-version: '3.29.3' # Use your project's specific version
+          flutter-version: '3.29.3' # プロジェクト固有のバージョンを使用
           channel: 'stable'
           cache: true
 
@@ -140,56 +146,62 @@ jobs:
         run: flutter build ipa --release --no-codesign
       # =======================================================
 
+      # --- IPA を ci-outputs へ移動 ---
+      - name: Stage iOS IPA
+        run: |
+          mkdir -p ./ci-outputs/build/ios/ipa
+          mv build/ios/ipa/*.ipa ./ci-outputs/build/ios/ipa/
+
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-ios-ipa
-          # Path is typically build/ios/ipa/*.ipa after `flutter build ipa`
-          path: build/ios/ipa/*.ipa
+          name: ci-ios-ipa
+          # パスは通常 `flutter build ipa` の後、build/ios/ipa/*.ipa になる
+          path: ./ci-outputs/build/ios/ipa/*.ipa
           retention-days: 7
 
   create-github-release:
     name: Create Draft GitHub Release
-    needs: [build-android-release, build-ios-release] # Run after builds complete
+    needs: [build-android-release, build-ios-release] # ビルド完了後に実行
     runs-on: ubuntu-latest
-    # Only run if a release_tag was provided and builds succeeded
+    # release_tagが提供され、ビルドが成功した場合のみ実行
     if: ${{ inputs.release_tag != '' && success() }}
     permissions:
-      contents: write # Needed to create releases
-      actions: read # Needed to download artifacts
+      contents: write # リリース作成に必要
+      actions: read # アーティファクトのダウンロードに必要
     steps:
       - name: Download Android Bundle Artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-android-bundle
-          path: ./release-artifacts/android-bundle
+          name: ci-android-bundle
+          path: ./ci-outputs/build/android-bundle
 
       - name: Download Android APKs Artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-android-apks
-          path: ./release-artifacts/android-apks
+          name: ci-android-apks
+          path: ./ci-outputs/build/android-apks
 
       - name: Download iOS IPA Artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-ios-ipa
-          path: ./release-artifacts/ios-ipa
+          name: ci-ios-ipa
+          path: ./ci-outputs/build/ios-ipa
 
       - name: List downloaded artifacts (for debugging)
-        run: ls -lR ./release-artifacts
+        run: ls -lR ./ci-outputs/build
 
       - name: Create GitHub Release Draft
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ inputs.release_tag }}
           name: Release ${{ inputs.release_tag }}
-          draft: true # Create a draft release
+          draft: true # ドラフトリリースを作成
           prerelease: false
-          # Attach all downloaded artifacts
+          # ダウンロードされたすべてのアーティファクトを添付
           files: |
-            ./release-artifacts/android-bundle/*
-            ./release-artifacts/android-apks/*
-            ./release-artifacts/ios-ipa/*
+            ./ci-outputs/build/android-bundle/*
+            ./ci-outputs/build/android-apks/*
+            ./ci-outputs/build/ios-ipa/*
           token: ${{ secrets.GITHUB_TOKEN }}
-          # body_path: path/to/release_notes.md # Optional: path to release notes 
+          # body_path: path/to/release_notes.md # オプション: リリースノートへのパス 

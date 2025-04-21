@@ -20,26 +20,26 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.12.0
         with:
-          flutter-version: '3.29.3' # またはプロジェクト固有のバージョンを使用
+          flutter-version: '3.29.3'
           channel: 'stable'
           cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      # 分析前にコード生成が必要な場合は build_runner を実行
+      # 分析前にコード生成が必要なので build_runner を実行
       - name: Run build_runner (if needed)
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Run Dart Format Check
         id: format
         run: dart format --set-exit-if-changed .
-        continue-on-error: true # フォーマットが失敗しても analyze を実行するために継続
+        continue-on-error: false
 
       - name: Run Dart Analyze
         id: analyze
         run: dart analyze
-        continue-on-error: true # 結合されたステータスを報告するために継続
+        continue-on-error: false
 
       - name: Set result status
         id: set-result
