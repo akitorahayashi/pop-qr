@@ -132,6 +132,9 @@ jobs:
         run: flutter build ipa --release --no-codesign
       # =======================================================
 
+      - name: Verify IPA Exists
+        run: ls -l build/ios/ipa/
+
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -164,9 +167,6 @@ jobs:
         with:
           name: ci-ios-ipa
           path: ./build/ios/ipa
-
-      - name: List downloaded artifacts (for debugging)
-        run: ls -lR ./build
 
       - name: Create GitHub Release Draft
         uses: softprops/action-gh-release@v1
