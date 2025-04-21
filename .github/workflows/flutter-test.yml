@@ -48,7 +48,7 @@ jobs:
         run: |
           set -eo pipefail
           if [ -d "test/unit_test" ]; then
-            flutter test --machine test/unit_test/ 2>&1 | dart pub global run junitreport:junitreport > ci-outputs/test-results/unit/junit.xml
+            flutter test --machine test/unit_test/ 2>&1 | dart pub global run junitreport:tojunit > ci-outputs/test-results/unit/junit.xml
           else
             echo "Unit test directory not found. Creating dummy successful report."
             echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/unit/junit.xml
@@ -61,7 +61,7 @@ jobs:
         run: |
           set -eo pipefail
           if [ -d "test/widget_test" ]; then
-            flutter test --machine test/widget_test/ 2>&1 | dart pub global run junitreport:junitreport > ci-outputs/test-results/widget/junit.xml
+            flutter test --machine test/widget_test/ 2>&1 | dart pub global run junitreport:tojunit > ci-outputs/test-results/widget/junit.xml
           else
             echo "Widget test directory not found. Creating dummy successful report."
             echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/widget/junit.xml

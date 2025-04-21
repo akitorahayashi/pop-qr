@@ -1,66 +1,76 @@
 name: pop_qr
 description: "Pop QR lets users store links, and present them as QR codes for face-to-face sharing."
 
+# publish_to: 'none' -> これにより、パッケージが pub.dev に誤って公開されるのを防ぎます。
 publish_to: "none"
 
 version: 1.0.0+1
 
 environment:
+  # Dart SDK のバージョン制約
   sdk: ^3.7.2
 
+# アプリケーションが動作するために必要なパッケージ
 dependencies:
+  # Flutter SDK自体
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  # iOS スタイルのアイコンを使用するためのパッケージ
   cupertino_icons: ^1.0.8
 
-  # State management
+  # 状態管理ライブラリ
   flutter_riverpod: ^2.5.1
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.21.0
 
-  # QR code generation
+  # QRコード生成ライブラリ
   qr_flutter: ^4.1.0
 
-  # Data persistence
+  # キーバリューストアによるデータ永続化ライブラリ
   shared_preferences: ^2.2.2
 
-  # Code generation
+  # コード生成 (Freezed, JSONシリアライゼーション)
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
-  # Utils
-  uuid: ^4.3.3
-  url_launcher: ^6.3.1
+  # ユーティリティ
+  uuid: ^4.3.3 # UUID生成
+  url_launcher: ^6.3.1 # URLを外部ブラウザで開く
 
+# 開発中にのみ必要なパッケージ (テスト、リント、コード生成など)
 dev_dependencies:
+  # Flutter のテストフレームワーク
   flutter_test:
     sdk: flutter
 
+  # 推奨されるリントルールセット
   flutter_lints: ^5.0.0
 
-  # Code generators
-  build_runner: ^2.4.8
-  freezed: ^2.4.7
-  json_serializable: ^6.7.1
+  # コード生成ツール
+  build_runner: ^2.4.8 # コード生成を実行する
+  freezed: ^2.4.7 # 不変クラス/モデル生成
+  json_serializable: ^6.7.1 # JSONシリアライズ/デシリアライズのコード生成
 
-  # Testing
+  # モックライブラリ (テスト用)
   mockito: ^5.4.4
 
-# flutter pub run flutter_launcher_icons:main
+# flutter_launcher_icons パッケージの設定 (アプリアイコン生成用)
+# 実行コマンド: flutter pub run flutter_launcher_icons:main
 flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/app_icon/app_icon_balloon_qr.png"
+  android: true # Android 用アイコンを生成
+  ios: true # iOS 用アイコンを生成
+  image_path: "assets/app_icon/app_icon_balloon_qr.png" # 元となるアイコン画像
   # image_path: "assets/app_icon/app_icon_focus_qr.png"
   # image_path: "assets/app_icon/app_icon_focus_link.png"
   # image_path: "assets/app_icon/app_icon_balloon_link.png"
 
+# Flutter 固有の設定
 flutter:
+  # Material Design を使用する
   uses-material-design: true
 
+  # アプリに含めるアセットファイル
   assets:
     - assets/app_icon/app_icon_balloon_link.png
     - assets/app_icon/app_icon_balloon_qr.png
