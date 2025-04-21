@@ -46,11 +46,10 @@ jobs:
 
   release-build:
     name: Production Build
-    needs: [format-and-analyze, test, report]
+    needs: [format-and-analyze, test]
     if: |
       needs.format-and-analyze.result == 'success' &&
       needs.test.result == 'success' &&
-      needs.report.result == 'success' &&
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
     uses: ./.github/workflows/build-for-production.yml
     with:
