@@ -6,7 +6,6 @@ on:
       result:
         description: "Overall test result (success/failure)"
         value: ${{ jobs.run-tests.outputs.result }}
-      # 統一されたテスト結果パスの出力
       test_results_path:
         description: "テスト結果成果物へのパス"
         value: ci-outputs/test-results
@@ -16,7 +15,7 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.set-final-result.outputs.status }} # 最終結果のステータス
+      result: ${{ steps.set-final-result.outputs.status }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,25 +30,23 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # build_runner を実行してコード生成
       - name: Run build_runner
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
-      # JUnit XML出力のためにjunitreportを有効化
       - name: Activate junitreport
         run: dart pub global activate junitreport
 
-      # テスト結果用ディレクトリを作成
+      - name: Add Dart global bin to PATH
+        run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
       - name: Create Test Results Directories
         run: |
           mkdir -p ci-outputs/test-results/unit
           mkdir -p ci-outputs/test-results/widget
 
-      # --- Unit Test Step ---
-      - name: Run Flutter Unit Tests with JUnit Output
+      - name: Run Unit Tests with JUnit Output
         id: run-unit-tests
         run: |
-          # Unitテストが test/unit_test/ にあると想定
           if [ -d "test/unit_test" ]; then
             flutter test --machine test/unit_test/ | junitreport > ci-outputs/test-results/unit/junit.xml
           else
@@ -59,11 +56,9 @@ jobs:
           fi
         continue-on-error: true
 
-      # --- Widget Test Step ---
-      - name: Run Flutter Widget Tests with JUnit Output
+      - name: Run Widget Tests with JUnit Output
         id: run-widget-tests
         run: |
-          # Widgetテストが test/widget_test/ にあると想定
           if [ -d "test/widget_test" ]; then
             flutter test --machine test/widget_test/ | junitreport > ci-outputs/test-results/widget/junit.xml
           else
@@ -73,19 +68,17 @@ jobs:
           fi
         continue-on-error: true
 
-      # --- 結果集約 ---
       - name: Set final result status
         id: set-final-result
         run: |
           UNIT_OUTCOME="${{ steps.run-unit-tests.outcome }}"
           WIDGET_OUTCOME="${{ steps.run-widget-tests.outcome }}"
-          
-          # JUnitレポートからテスト失敗を検出
+
           UNIT_FAILURES=0
           WIDGET_FAILURES=0
           UNIT_ERRORS=0
           WIDGET_ERRORS=0
-          
+
           if [ -f "ci-outputs/test-results/unit/junit.xml" ]; then
             # JUnitレポートから失敗数を抽出
             UNIT_FAILURES=$(grep -oP 'failures="\K[0-9]+' ci-outputs/test-results/unit/junit.xml || echo "0")
@@ -94,7 +87,7 @@ jobs:
           else
             echo "Unit test report not found"
           fi
-          
+
           if [ -f "ci-outputs/test-results/widget/junit.xml" ]; then
             # JUnitレポートから失敗数を抽出
             WIDGET_FAILURES=$(grep -oP 'failures="\K[0-9]+' ci-outputs/test-results/widget/junit.xml || echo "0")
@@ -103,29 +96,28 @@ jobs:
           else
             echo "Widget test report not found"
           fi
-          
-          # ステップが成功しており、テスト失敗がない場合に成功と判断
-          if [[ "$UNIT_OUTCOME" == "success" && "$WIDGET_OUTCOME" == "success" && 
-                "$UNIT_FAILURES" == "0" && "$UNIT_ERRORS" == "0" && 
+
+          # ステップ自体の実行結果と、JUnitレポート内の失敗/エラー数が両方ゼロの場合に成功と判断
+          if [[ "$UNIT_OUTCOME" == "success" && "$WIDGET_OUTCOME" == "success" &&
+                "$UNIT_FAILURES" == "0" && "$UNIT_ERRORS" == "0" &&
                 "$WIDGET_FAILURES" == "0" && "$WIDGET_ERRORS" == "0" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "All tests passed (Unit & Widget)."
           else
             echo "status=failure" >> $GITHUB_OUTPUT
             echo "::error::Test failures detected."
-            
+
             if [[ "$UNIT_OUTCOME" != "success" || "$UNIT_FAILURES" != "0" || "$UNIT_ERRORS" != "0" ]]; then
               echo "::error::- Unit tests failed or reported failures/errors."
             fi
-            
+
             if [[ "$WIDGET_OUTCOME" != "success" || "$WIDGET_FAILURES" != "0" || "$WIDGET_ERRORS" != "0" ]]; then
               echo "::error::- Widget tests failed or reported failures/errors."
             fi
-            
-            exit 1 # ワークフローを失敗させる
+
+            exit 1
           fi
 
-      # --- Artifact Uploads ---
       - name: Upload Unit Test Results
         if: steps.run-unit-tests.outcome != 'skipped' && hashFiles('ci-outputs/test-results/unit/junit.xml') != ''
         uses: actions/upload-artifact@v4
@@ -140,4 +132,4 @@ jobs:
         with:
           name: ci-widget-test-results-junit
           path: ci-outputs/test-results/widget/junit.xml
-          retention-days: 7 
+          retention-days: 7
