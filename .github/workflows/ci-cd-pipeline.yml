@@ -70,7 +70,7 @@ jobs:
     uses: ./.github/workflows/notify-completion.yml
     with:
       pr_number: ${{ github.event.pull_request.number || 0 }}
-      run_id: ${{ github.run_id }}
+      run_id: '${{ github.run_id }}'
       code_quality_needs: ${{ toJSON(needs.format-and-analyze) }}
       flutter_test_needs: ${{ toJSON(needs.test) }}
       test_report_needs: ${{ toJSON(needs.report) }}
