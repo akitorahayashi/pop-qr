@@ -2,6 +2,12 @@
 
 targets:
   $default:
+    sources:
+      include:
+        - lib/model/*.dart
+      exclude:
+        - test/** # テストコードはビルド対象から除外
+
     builders:
       # `source_gen` のビルダー
       source_gen|combining_builder:
