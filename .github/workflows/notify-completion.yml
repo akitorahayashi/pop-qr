@@ -10,7 +10,7 @@ on:
       run_id:
         description: 'The ID of the current workflow run'
         required: true
-        type: number
+        type: string
       code_quality_needs:
         description: 'Needs context for format-and-analyze job'
         required: false
