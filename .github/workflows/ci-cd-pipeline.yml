@@ -1,0 +1,79 @@
+name: Pop QR CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format-and-analyze:
+    name: Code Quality Check
+    uses: ./.github/workflows/code-quality.yml
+
+  test:
+    name: Flutter Test
+    uses: ./.github/workflows/flutter-test.yml
+
+  report:
+    name: Test Report
+    needs: test
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/test-reporter.yml
+    with:
+      pull_request_number: ${{ github.event.pull_request.number }}
+    permissions:
+      checks: write
+      actions: read
+      pull-requests: write
+    secrets: inherit
+
+  review:
+    name: Copilot Review
+    needs: test
+    if: github.event_name == 'pull_request' && needs.test.result == 'success'
+    uses: ./.github/workflows/copilot-review.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+    permissions:
+      pull-requests: write
+      contents: read
+    secrets: inherit
+
+  release-build:
+    name: Production Build
+    needs: [format-and-analyze, test, report]
+    if: |
+      needs.format-and-analyze.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.report.result == 'success' &&
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    uses: ./.github/workflows/build-for-production.yml
+    with:
+      release_tag: prod-${{ github.run_number }}
+      pr_number: ${{ github.event.pull_request.number || 0 }}
+    permissions:
+      contents: write
+      actions: read
+    secrets: inherit
+
+  notify:
+    name: Notify Completion
+    needs: [format-and-analyze, test, report, review, release-build]
+    if: always()
+    permissions:
+      pull-requests: write
+      actions: read
+    uses: ./.github/workflows/notify-completion.yml
+    with:
+      pr_number: ${{ github.event.pull_request.number || 0 }}
+      run_id: '${{ github.run_id }}'
+      code_quality_needs: ${{ toJSON(needs.format-and-analyze) }}
+      flutter_test_needs: ${{ toJSON(needs.test) }}
+      test_report_needs: ${{ toJSON(needs.report) }}
+      code_review_needs: ${{ toJSON(needs.review) }}
+      production_build_needs: ${{ toJSON(needs.release-build) }}

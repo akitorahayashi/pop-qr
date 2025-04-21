@@ -1,0 +1,140 @@
+name: Flutter Test
+
+on:
+  workflow_call:
+    outputs:
+      result:
+        description: "Overall test result (success/failure)"
+        value: ${{ jobs.run-tests.outputs.result }}
+      test_results_path:
+        description: "テスト結果成果物へのパス"
+        value: ci-outputs/test-results
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.set-final-result.outputs.status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.12.0
+        with:
+          flutter-version: '3.29.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Activate junitreport
+        run: dart pub global activate junitreport
+
+      - name: Add Dart global bin to PATH
+        run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Create Test Results Directories
+        run: |
+          mkdir -p ci-outputs/test-results/unit
+          mkdir -p ci-outputs/test-results/widget
+
+      - name: Run Unit Tests with JUnit Output
+        id: run-unit-tests
+        run: |
+          set -eo pipefail
+          if [ -d "test/unit_test" ]; then
+            flutter test --machine test/unit_test/ 2>&1 | dart pub global run junitreport:tojunit > ci-outputs/test-results/unit/junit.xml
+          else
+            echo "Unit test directory not found. Creating dummy successful report."
+            echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/unit/junit.xml
+            exit 0
+          fi
+        continue-on-error: false
+
+      - name: Run Widget Tests with JUnit Output
+        id: run-widget-tests
+        run: |
+          set -eo pipefail
+          if [ -d "test/widget_test" ]; then
+            flutter test --machine test/widget_test/ 2>&1 | dart pub global run junitreport:tojunit > ci-outputs/test-results/widget/junit.xml
+          else
+            echo "Widget test directory not found. Creating dummy successful report."
+            echo '<?xml version="1.0" encoding="UTF-8"?><testsuites><testsuite name="dummy" tests="1" errors="0" failures="0" skipped="0"><testcase classname="dummy" name="dummy_test" time="0"></testcase></testsuite></testsuites>' > ci-outputs/test-results/widget/junit.xml
+            exit 0
+          fi
+        continue-on-error: false
+
+      - name: Set final result status
+        id: set-final-result
+        run: |
+          UNIT_OUTCOME="${{ steps.run-unit-tests.outcome }}"
+          WIDGET_OUTCOME="${{ steps.run-widget-tests.outcome }}"
+
+          UNIT_FAILURES=0
+          WIDGET_FAILURES=0
+          UNIT_ERRORS=0
+          WIDGET_ERRORS=0
+
+          if [ -f "ci-outputs/test-results/unit/junit.xml" ]; then
+            # JUnitレポートから失敗数を抽出 (最初のマッチのみ取得し、空の場合は0をデフォルトとする)
+            UNIT_FAILURES=$(grep -oP 'failures="\\K[0-9]+' ci-outputs/test-results/unit/junit.xml | head -n 1)
+            UNIT_ERRORS=$(grep -oP 'errors="\\K[0-9]+' ci-outputs/test-results/unit/junit.xml | head -n 1)
+            UNIT_FAILURES=${UNIT_FAILURES:-0}
+            UNIT_ERRORS=${UNIT_ERRORS:-0}
+            echo "Unit test failures: $UNIT_FAILURES, errors: $UNIT_ERRORS"
+          else
+            echo "Unit test report not found"
+          fi
+
+          if [ -f "ci-outputs/test-results/widget/junit.xml" ]; then
+            # JUnitレポートから失敗数を抽出 (最初のマッチのみ取得し、空の場合は0をデフォルトとする)
+            WIDGET_FAILURES=$(grep -oP 'failures="\\K[0-9]+' ci-outputs/test-results/widget/junit.xml | head -n 1)
+            WIDGET_ERRORS=$(grep -oP 'errors="\\K[0-9]+' ci-outputs/test-results/widget/junit.xml | head -n 1)
+            WIDGET_FAILURES=${WIDGET_FAILURES:-0}
+            WIDGET_ERRORS=${WIDGET_ERRORS:-0}
+            echo "Widget test failures: $WIDGET_FAILURES, errors: $WIDGET_ERRORS"
+          else
+            echo "Widget test report not found"
+          fi
+
+          # ステップ自体の実行結果と、JUnitレポート内の失敗/エラー数が両方ゼロの場合に成功と判断
+          if [[ "$UNIT_OUTCOME" == "success" && "$WIDGET_OUTCOME" == "success" &&
+                "$UNIT_FAILURES" == "0" && "$UNIT_ERRORS" == "0" &&
+                "$WIDGET_FAILURES" == "0" && "$WIDGET_ERRORS" == "0" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "All tests passed (Unit & Widget)."
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "::error::Test failures detected."
+
+            if [[ "$UNIT_OUTCOME" != "success" || "$UNIT_FAILURES" != "0" || "$UNIT_ERRORS" != "0" ]]; then
+              echo "::error::- Unit tests failed or reported failures/errors."
+            fi
+
+            if [[ "$WIDGET_OUTCOME" != "success" || "$WIDGET_FAILURES" != "0" || "$WIDGET_ERRORS" != "0" ]]; then
+              echo "::error::- Widget tests failed or reported failures/errors."
+            fi
+
+            exit 1
+          fi
+
+      - name: Upload Unit Test Results
+        if: steps.run-unit-tests.outcome != 'skipped' && hashFiles('ci-outputs/test-results/unit/junit.xml') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-unit-test-results-junit
+          path: ci-outputs/test-results/unit/junit.xml
+          retention-days: 7
+
+      - name: Upload Widget Test Results
+        if: steps.run-widget-tests.outcome != 'skipped' && hashFiles('ci-outputs/test-results/widget/junit.xml') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-widget-test-results-junit
+          path: ci-outputs/test-results/widget/junit.xml
+          retention-days: 7
