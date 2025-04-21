@@ -1,4 +1,4 @@
-name: Notify Completion Reusable Workflow
+name: Notify Completion
 
 on:
   workflow_call:
@@ -37,34 +37,42 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      actions: read # アーティファクトAPI呼び出しに必要
     steps:
-      - name: Summarize Results and Comment on PR
+      - name: Summarize Results and Comment on PR # ステップ名を元に戻す
+        # IDは不要になったため削除
         uses: actions/github-script@v7
         env:
+          # 全ての必要な入力をenvに含める
           PR_NUMBER: ${{ inputs.pr_number }}
           RUN_ID: ${{ inputs.run_id }}
-          NEEDS_QUALITY: ${{ toJSON(inputs.code_quality_needs) }}
-          NEEDS_TEST: ${{ toJSON(inputs.flutter_test_needs) }}
-          NEEDS_REPORT: ${{ toJSON(inputs.test_report_needs) }}
-          NEEDS_REVIEW: ${{ toJSON(inputs.code_review_needs) }}
-          NEEDS_PROD_BUILD: ${{ toJSON(inputs.production_build_needs) }}
+          NEEDS_QUALITY: ${{ inputs.code_quality_needs }}
+          NEEDS_TEST: ${{ inputs.flutter_test_needs }}
+          NEEDS_REPORT: ${{ inputs.test_report_needs }}
+          NEEDS_REVIEW: ${{ inputs.code_review_needs }}
+          NEEDS_PROD_BUILD: ${{ inputs.production_build_needs }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const core = require('@actions/core');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
+
+            // PR番号チェックをスクリプトの最初で行う
             if (!prNumber || prNumber === 0) {
               console.log('プルリクエストではない、またはPR番号が提供されていないため、通知コメントをスキップします。');
               return;
             }
 
-            // JSON文字列をオブジェクトにパースし直す
-            // 潜在的なパースエラーや null/undefined な入力を処理
+            const { owner, repo } = context.repo;
+
+            // --- パースとステータス計算 --- 
             const parseNeeds = (jsonString) => {
               try {
+                if (typeof jsonString === 'object') return jsonString;
                 return JSON.parse(jsonString || '{}');
               } catch (e) {
                 console.warn("needs コンテキストのパースに失敗しました:", jsonString, e);
-                return {}; // エラー時は空のオブジェクトを返す
+                return {};
               }
             };
 
@@ -74,9 +82,8 @@ jobs:
             const reviewNeeds = parseNeeds(process.env.NEEDS_REVIEW);
             const prodBuildNeeds = parseNeeds(process.env.NEEDS_PROD_BUILD);
 
-            // needs オブジェクトから結果とスキップ状態を判断
             const getJobStatus = (needsContext) => {
-              const result = needsContext?.result || 'skipped'; // コンテキストや結果がない場合は skipped をデフォルトとする
+              const result = needsContext?.result || 'skipped';
               const skipped = result === 'skipped';
               return { result, skipped };
             };
@@ -87,15 +94,11 @@ jobs:
             const reviewStatus = getJobStatus(reviewNeeds);
             const prodBuildStatus = getJobStatus(prodBuildNeeds);
 
-            const runId = process.env.RUN_ID;
-            const { owner, repo } = context.repo;
-            const commentMarker = '<!-- cicd-summary-pop-qr -->';
-
             const getIcon = (status) => {
               if (status.skipped) return '⏭️';
               if (status.result === 'success') return '✅';
               if (status.result === 'failure') return '❌';
-              return '❓'; // 不明、キャンセルなど
+              return '❓';
             };
 
             let overallStatus = '❓ 不明';
@@ -111,15 +114,67 @@ jobs:
               overallStatus = '❓ スキップまたは不完全';
             }
 
+            // --- アーティファクトリンク生成 --- 
+            let artifactLinks = '';
+            const runId = process.env.RUN_ID;
+            if (reportStatus.result !== 'skipped') {
+              try {
+                console.log(`Fetching artifacts for run ID: ${runId}`);
+                const { data: artifactList } = await github.rest.actions.listWorkflowRunArtifacts({
+                  owner: owner,
+                  repo: repo,
+                  run_id: runId,
+                });
+                 console.log(`Found ${artifactList.total_count} artifacts.`);
+
+                const unitTestArtifact = artifactList.artifacts.find(a => a.name === 'ci-unit-test-results-junit');
+                const widgetTestArtifact = artifactList.artifacts.find(a => a.name === 'ci-widget-test-results-junit');
+
+                let links = [];
+                 if (unitTestArtifact) {
+                   const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${unitTestArtifact.id}`;
+                   links.push(`[Unit Tests](${artifactPageUrl})`);
+                   console.log(`Found Unit Test artifact: ${unitTestArtifact.id}`);
+                 } else {
+                    console.log('Unit Test artifact not found.');
+                 }
+                 if (widgetTestArtifact) {
+                   const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${widgetTestArtifact.id}`;
+                   links.push(`[Widget Tests](${artifactPageUrl})`);
+                    console.log(`Found Widget Test artifact: ${widgetTestArtifact.id}`);
+                 } else {
+                    console.log('Widget Test artifact not found.');
+                 }
+
+                 if (links.length > 0) {
+                   artifactLinks = `(Downloads: ${links.join(', ')})`;
+                 } else {
+                    artifactLinks = '(No report artifacts found)';
+                 }
+
+              } catch (error) {
+                console.error("Artifactの取得またはリンク生成中にエラーが発生しました:", error);
+                artifactLinks = '(Error fetching artifacts)';
+              }
+            } else {
+               artifactLinks = '(Skipped)';
+            }
+
+            // --- コメント本文の構築 --- 
+            const commentMarker = '<!-- cicd-summary-pop-qr -->';
+            const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
+
             let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallStatus}\n\n`;
             commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\n`;
             commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\n`;
-            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} (PRのみ)\n`;
-            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)} (PRのみ)\n`;
-            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)} (main/masterのみ)\n`;
-            commentBody += `\n[View Workflow Run](https://github.com/${owner}/${repo}/actions/runs/${runId})\n`;
+            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} ${artifactLinks}\n`;
+            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\n`;
+            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\n`;
+            commentBody += `\n[View Workflow Run](${workflowRunUrl})\n`;
 
+            // --- コメント投稿/更新ロジック --- 
             try {
+              console.log(`Looking for existing comment on PR #${prNumber}`);
               const { data: comments } = await github.rest.issues.listComments({
                 owner: owner,
                 repo: repo,
