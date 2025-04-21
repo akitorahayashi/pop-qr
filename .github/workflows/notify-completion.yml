@@ -174,37 +174,22 @@ jobs:
             commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\\n`;
             commentBody += `\\n[View Workflow Run](${workflowRunUrl})\\n`;
 
-            // --- コメント投稿/更新ロジック ---
+            // --- コメント投稿/更新ロジック --- 
             try {
-              console.log(`Looking for existing comment on PR #${prNumber}`);
-              const { data: comments } = await github.rest.issues.listComments({
+              // 既存コメントの検索と更新ロジックを削除
+              // const { data: comments } = await github.rest.issues.listComments(...);
+              // const existingComment = comments.find(...);
+              // if (existingComment) { ... } else { ... }
+
+              // 常に新しいコメントを作成する
+              console.log(`Creating new comment on PR #${prNumber}`);
+              await github.rest.issues.createComment({
                 owner: owner,
                 repo: repo,
                 issue_number: prNumber,
+                body: commentBody,
               });
 
-              const existingComment = comments.find(c =>
-                c.user && c.user.login === 'github-actions[bot]' &&
-                c.body && c.body.includes(commentMarker)
-              );
-
-              if (existingComment) {
-                console.log(`Updating comment ${existingComment.id} on PR #${prNumber}`);
-                await github.rest.issues.updateComment({
-                  owner: owner,
-                  repo: repo,
-                  comment_id: existingComment.id,
-                  body: commentBody,
-                });
-              } else {
-                console.log(`Creating new comment on PR #${prNumber}`);
-                await github.rest.issues.createComment({
-                  owner: owner,
-                  repo: repo,
-                  issue_number: prNumber,
-                  body: commentBody,
-                });
-              }
             } catch (error) {
               console.error("GitHub APIとの対話中にエラーが発生しました:", error);
               core.setFailed(`コメントの投稿または更新に失敗しました: ${error.message}`);
