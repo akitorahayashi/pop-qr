@@ -4,10 +4,10 @@ targets:
   $default:
     sources:
       include:
-        - lib/model/*.dart
+        - "lib/**"
+        - "pubspec.yaml"
       exclude:
-        - test/** # テストコードはビルド対象から除外
-
+        - test/**
     builders:
       # `source_gen` のビルダー
       source_gen|combining_builder:
