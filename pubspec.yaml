@@ -1,7 +1,7 @@
 name: pop_qr
 description: "Pop QR lets users store links, and present them as QR codes for face-to-face sharing."
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -15,22 +15,22 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  
+
   # State management
   flutter_riverpod: ^2.5.1
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.21.0
-  
+
   # QR code generation
   qr_flutter: ^4.1.0
-  
+
   # Data persistence
   shared_preferences: ^2.2.2
-  
+
   # Code generation
   freezed_annotation: ^2.4.1
-  json_annotation: ^4.8.1
-  
+  json_annotation: ^4.9.0
+
   # Utils
   uuid: ^4.3.3
   url_launcher: ^6.3.1
@@ -40,15 +40,14 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
-  
+
   # Code generators
   build_runner: ^2.4.8
   freezed: ^2.4.7
   json_serializable: ^6.7.1
-  
+
   # Testing
   mockito: ^5.4.4
-
 
 # flutter pub run flutter_launcher_icons:main
 flutter_icons:
@@ -60,7 +59,6 @@ flutter_icons:
   # image_path: "assets/app_icon/app_icon_balloon_link.png"
 
 flutter:
-
   uses-material-design: true
 
   assets:

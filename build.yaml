@@ -2,12 +2,6 @@
 
 targets:
   $default:
-    sources:
-      include:
-        - lib/model/*.dart
-      exclude:
-        - test/**  # テストコードはビルド対象から除外
-
     builders:
       # `source_gen` のビルダー
       source_gen|combining_builder:
@@ -15,7 +9,7 @@ targets:
           - lib/model/*.dart
         options:
           build_extensions:
-            '^lib/model/{{}}.dart': 'lib/model/generate/{{}}.g.dart'
+            "^lib/model/{{}}.dart": "lib/model/generate/{{}}.g.dart"
 
       # JSON Serializable のビルダー設定
       json_serializable:
@@ -23,12 +17,12 @@ targets:
           - lib/model/*.dart
         options:
           explicit_to_json: true
-          include_if_null: false 
-          
+          include_if_null: false
+
       # Freezed のビルダー設定
       freezed:
         generate_for:
           - lib/model/*.dart
         options:
           build_extensions:
-            '^lib/model/{{}}.dart': 'lib/model/generate/{{}}.freezed.dart'
+            "^lib/model/{{}}.dart": "lib/model/generate/{{}}.freezed.dart"
