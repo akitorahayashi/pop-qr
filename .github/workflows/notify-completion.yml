@@ -54,7 +54,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const core = require('@actions/core');
             const prNumber = parseInt(process.env.PR_NUMBER, 10);
 
             // PR番号チェックをスクリプトの最初で行う
