@@ -150,29 +150,35 @@ jobs:
 
                  if (nestedLinks.length > 0) {
                    // Join the nested list items with newlines and prepend a newline for formatting
-                   reportDetails = `\\n${nestedLinks.join('\\n')}`;
+                   // Ensure the entire block starts on a new line relative to the parent bullet
+                   reportDetails = `\n${nestedLinks.join('\n')}`;
                  } else {
-                    reportDetails = ' No report artifacts found'; // Add a space for better formatting
+                    // Add a leading space for status text like 'Skipped' or 'No report artifacts found'
+                    reportDetails = ' No report artifacts found';
                  }
 
               } catch (error) {
                 console.error("Artifactの取得またはリンク生成中にエラーが発生しました:", error);
-                reportDetails = ' Error fetching artifacts'; // Add a space
+                // Add a leading space for error text
+                reportDetails = ' Error fetching artifacts';
               }
-            } // Removed the 'else' block here as reportDetails is already 'Skipped' by default
+            } else {
+              // Ensure 'Skipped' also has a leading space
+              reportDetails = ' Skipped';
+            }
 
             // --- コメント本文の構築 ---
             const commentMarker = '<!-- cicd-summary-pop-qr -->';
             const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
 
-            let commentBody = `${commentMarker}\\n\\n## CI/CD Pipeline Summary: ${overallIcon}\\n\\n`;
-            commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\\n`;
-            commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\\n`;
-            // Append the reportDetails (which now contains the nested list or status text) directly after the icon
-            commentBody += `*   **Test Report:** ${getIcon(reportStatus)}${reportDetails}\\n`;
-            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\\n`;
-            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\\n`;
-            commentBody += `\\n[View Workflow Run](${workflowRunUrl})\\n`;
+            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallIcon}\n\n`;
+            commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\n`;
+            commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\n`;
+            // Append the reportDetails. It will start with \n for the list or a space for text.
+            commentBody += `*   **Test Report:** ${getIcon(reportStatus)}${reportDetails}\n`;
+            commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\n`;
+            commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\n`;
+            commentBody += `\n[View Workflow Run](${workflowRunUrl})\n`;
 
             // --- コメント投稿/更新ロジック --- 
             try {
