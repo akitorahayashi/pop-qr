@@ -106,11 +106,11 @@ jobs:
             const coreChecksRan = !qualityStatus.skipped && !testStatus.skipped;
 
             if (coreChecksRan && coreChecksSucceeded) {
-              overallStatus = '✅ 成功';
+              overallIcon = '✅';
             } else if (coreChecksFailed) {
-              overallStatus = '❌ 失敗または不完全';
+              overallIcon = '❌';
             } else {
-              overallStatus = '❓ スキップまたは不完全';
+              overallIcon = '❓';
             }
 
             // --- アーティファクトリンク生成 --- 
@@ -132,41 +132,41 @@ jobs:
                 let links = [];
                  if (unitTestArtifact) {
                    const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${unitTestArtifact.id}`;
-                   links.push(`[Unit Tests](${artifactPageUrl})`);
+                   links.push(`[Unit Tests Report](${artifactPageUrl})`);
                    console.log(`Found Unit Test artifact: ${unitTestArtifact.id}`);
                  } else {
                     console.log('Unit Test artifact not found.');
                  }
                  if (widgetTestArtifact) {
                    const artifactPageUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}/artifacts/${widgetTestArtifact.id}`;
-                   links.push(`[Widget Tests](${artifactPageUrl})`);
+                   links.push(`[Widget Tests Report](${artifactPageUrl})`);
                     console.log(`Found Widget Test artifact: ${widgetTestArtifact.id}`);
                  } else {
                     console.log('Widget Test artifact not found.');
                  }
 
                  if (links.length > 0) {
-                   artifactLinks = `(Downloads: ${links.join(', ')})`;
+                   artifactLinks = `${links.join(', ')}`;
                  } else {
-                    artifactLinks = '(No report artifacts found)';
+                    artifactLinks = 'No report artifacts found';
                  }
 
               } catch (error) {
                 console.error("Artifactの取得またはリンク生成中にエラーが発生しました:", error);
-                artifactLinks = '(Error fetching artifacts)';
+                artifactLinks = 'Error fetching artifacts';
               }
             } else {
-               artifactLinks = '(Skipped)';
+               artifactLinks = 'Skipped';
             }
 
             // --- コメント本文の構築 --- 
             const commentMarker = '<!-- cicd-summary-pop-qr -->';
             const workflowRunUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
 
-            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallStatus}\n\n`;
+            let commentBody = `${commentMarker}\n\n## CI/CD Pipeline Summary: ${overallIcon}\n\n`;
             commentBody += `*   **Code Quality:** ${getIcon(qualityStatus)}\n`;
             commentBody += `*   **Build & Tests:** ${getIcon(testStatus)}\n`;
-            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} ${artifactLinks}\n`;
+            commentBody += `*   **Test Report:** ${getIcon(reportStatus)} - ${artifactLinks}\n`;
             commentBody += `*   **Code Review:** ${getIcon(reviewStatus)}\n`;
             commentBody += `*   **Production Build:** ${getIcon(prodBuildStatus)}\n`;
             commentBody += `\n[View Workflow Run](${workflowRunUrl})\n`;
