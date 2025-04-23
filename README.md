@@ -142,6 +142,7 @@ QRコードの追加時には、入力値のバリデーションを行います
 ## 開発環境
 
 - **Flutter**: バージョン `3.29.3`
+- **Dart SDK**: バージョン `^3.7.2`
 - **主要コマンド**:
   - 依存関係のインストール: `flutter pub get`
   - コード生成: `flutter pub run build_runner build --delete-conflicting-outputs`

@@ -1,13 +1,11 @@
 name: pop_qr
 description: "Pop QR lets users store links, and present them as QR codes for face-to-face sharing."
 
-# publish_to: 'none' -> これにより、パッケージが pub.dev に誤って公開されるのを防ぎます。
 publish_to: "none"
 
 version: 1.0.0+1
 
 environment:
-  # Dart SDK のバージョン制約
   sdk: ^3.7.2
 
 dependencies:
