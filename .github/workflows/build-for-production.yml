@@ -73,7 +73,7 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build iOS IPA (Release, No Code Signing)
-        run: flutter build ipa --release --no-codesign
+        run: flutter build ipa --release
 
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
