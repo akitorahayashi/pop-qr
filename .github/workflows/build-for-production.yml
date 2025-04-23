@@ -73,13 +73,13 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Build iOS IPA (Release, No Code Signing)
-        run: flutter build ipa --release
+        run: flutter build ipa --release --no-codesign
 
-      - name: Upload iOS IPA Artifact
+      - name: Upload iOS Archive Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ci-ios-ipa
-          path: build/ios/ipa/*.ipa
+          name: ci-ios-xcarchive
+          path: build/ios/archive/*.xcarchive
           retention-days: 7
 
   create-github-release:
@@ -108,6 +108,12 @@ jobs:
           name: ci-ios-ipa
           path: ./build/ios/ipa
 
+      - name: Download iOS Archive Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-ios-xcarchive
+          path: ./build/ios/archive
+
       - name: Create GitHub Release Draft
         uses: softprops/action-gh-release@v1
         with:
@@ -118,5 +124,5 @@ jobs:
           files: |
             ./build/app/outputs/bundle/release/*.aab
             ./build/app/outputs/flutter-apk/*-release.apk
-            ./build/ios/ipa/*.ipa
+            ./build/ios/archive/*.xcarchive
           token: ${{ secrets.GITHUB_TOKEN }}
