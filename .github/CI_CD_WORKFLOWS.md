@@ -116,24 +116,6 @@ $ ./.github/scripts/run-local-ci.sh --ui-test
 $ ./.github/scripts/run-local-ci.sh --archive-only
 ```
 
-### テストのみ実行 (ビルド成果物を再利用)
-
-テストコードのみを修正した後、既存のビルド成果物 (`ci-outputs/test-results/DerivedData`) を再利用して、テストのみを高速に再実行・検証します
-事前に上記のコマンドで `--all-tests` や `--unit-test` などを実行してビルド成果物を作成しておく必要があります
-
-```shell
-# 単体テストとUIテストの両方を再実行・検証
-$ ./.github/scripts/run-local-ci.sh --test-without-building
-
-# 単体テストのみを再実行・検証
-$ ./.github/scripts/run-local-ci.sh --test-without-building --unit-test
-
-# UIテストのみを再実行・検証
-$ ./.github/scripts/run-local-ci.sh --test-without-building --ui-test
-```
-
-スクリプトがエラーなく完了すれば、CI の主要なチェックは成功する可能性が高いです
-
 ## 技術仕様
 
 -   主な実行環境 Ubuntu (大部分のジョブ), macOS (iOSビルド用)

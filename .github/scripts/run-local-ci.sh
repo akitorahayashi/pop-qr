@@ -1,3 +1,14 @@
+# =======================
+# このスクリプトは、CIで行われる主要なチェック (フォーマット、静的解析、テスト、ビルド、アーカイブ) をローカルで実行します。
+# PR作成前に問題を検出するのに役立ちます。
+#
+#   ./.github/scripts/run-local-ci.sh                   # 全てのデフォルトステップ (フォーマット、解析、デバッグビルド、単体テスト、アーカイブ)
+#   ./.github/scripts/run-local-ci.sh --all-tests       # デバッグビルド + 単体/UIテスト
+#   ./.github/scripts/run-local-ci.sh --unit-test       # デバッグビルド + 単体テスト
+#   ./.github/scripts/run-local-ci.sh --ui-test         # デバッグビルド + UIテスト
+#   ./.github/scripts/run-local-ci.sh --archive-only    # リリースビルド (APK/AAB/IPA)
+# =======================
+
 #!/bin/bash
 set -e
 

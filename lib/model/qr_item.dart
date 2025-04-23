@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:flutter/foundation.dart';
 
 part 'generate/qr_item.freezed.dart';
 part 'generate/qr_item.g.dart';
