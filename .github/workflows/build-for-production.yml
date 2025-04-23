@@ -54,7 +54,7 @@ jobs:
           retention-days: 7
 
   build-ios-release:
-    runs-on: macos-latest # iOS builds require macOS
+    runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2.12.0
         with:
-          flutter-version: '3.29.3' # Match the version used for Android
+          flutter-version: '3.29.3'
           channel: 'stable'
           cache: true
 
@@ -79,11 +79,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-ios-ipa
-          path: build/ios/ipa/*.ipa # Default path for unsigned IPA
+          path: build/ios/ipa/*.ipa
           retention-days: 7
 
   create-github-release:
-    needs: [build-android-release, build-ios-release] # Add build-ios-release dependency
+    needs: [build-android-release, build-ios-release]
     runs-on: ubuntu-latest
     if: ${{ inputs.release_tag != '' && success() }}
     permissions:
