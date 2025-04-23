@@ -102,6 +102,12 @@ jobs:
           name: ci-android-apks
           path: ./build/app/outputs/flutter-apk
 
+      - name: Download iOS IPA Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-ios-ipa
+          path: ./build/ios/ipa
+
       - name: Create GitHub Release Draft
         uses: softprops/action-gh-release@v1
         with:
@@ -112,4 +118,5 @@ jobs:
           files: |
             ./build/app/outputs/bundle/release/*.aab
             ./build/app/outputs/flutter-apk/*-release.apk
+            ./build/ios/ipa/*.ipa
           token: ${{ secrets.GITHUB_TOKEN }}
